@@ -43,7 +43,7 @@ jobs:
         # Set up git user name and tag this commit
         - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
         - export ARCHIVE=mathlib-$TRAVIS_TAG.tar.gz
-        - tar -zcvf $ARCHIVE.tar.gz src
+        - tar -zcvf $ARCHIVE src
         - git config --local user.name leanprover-mathlib-bot
         - git config --local user.email "$BOT_EMAIL"
         - git tag $TRAVIS_TAG
@@ -51,7 +51,7 @@ jobs:
         provider: releases
         api_key:
           secure: HsAy78hjdJf+jg2yGqD7MWGCn+8K/EceaZ8sZ2U/95Kprmnetc1A5j1T0pgY531pQbjGm6XSbVdn0L0ymuunKo7gIfg3q4+ns6bMCucnxdCrXdJR9/DoUwSLVqJrdFjcigJ58ekMUh1l2g7jIfqJwCAM09FF+dMF09Wh9wVKGK1TYsr6RHZ7NqYlfme6hO+GwBw545NbSHxWEjvNT/8s+T8sMAwMWqjzXm/n/GNUn2TGoRwkwp/BdcQ9V7hKOHX0bbMQXc5RZniVqVnFpnZHx8zTIWJoKnx4HeS5beYN/OcPha6cShqpml3sGaGSUrkWBnQYOzcx28lA4jblYIc84g7lyryLhT2qYB02Fv4C97hyYIppDDdx4Op3NF4IdPqvHazji1pmctWH6muE0z/pJNw5fEX+eNY9djGnexRE8XnVUJigtvh0cUmYRPlb7+6Qza7K6lXzdXflK8TEDYcY9lTHoLw+h8ffFFxKq18yNzvwMoLk9VaA/h2gSCTTjOXrr8s3tLRBNJEjkFWvRAVPaJCbDep5DPf/eK9VEL497xZAfe8YLf1CKlw1ynV7nNb5VB4dPoQFxak/76gDQT/po1l2c/QC4EJe02Degx0+0FG+e2MlY7k/uJb4qndVXdJZQE9DQty0IquHPU0KNISp+VVb7xanh26UtulE/0YdChI=
-          file: "$ARCHIVE"
+        file: "$ARCHIVE"
         on:
           branch: deploy-olean
           repo: leanprover-community/mathlib
