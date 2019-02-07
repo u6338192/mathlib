@@ -55,7 +55,7 @@ jobs:
         - leanpkg test
         # - lean --recursive --export=mathlib.txt src/
         # - leanchecker mathlib.txt
-      before_deploy:
+      # before_deploy:
         # Set up git user name and tag this commit
         - export TRAVIS_TAG=${TRAVIS_TAG:-bin-$(date +'%Y%m%d-%H%M%S')-$(git log --format=%h -1)}
         - export ARCHIVE=mathlib-$TRAVIS_TAG.tar.gz
