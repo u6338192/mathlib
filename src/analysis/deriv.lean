@@ -7,11 +7,12 @@ The Frechet derivative. We use `fderiv` for the Frechet derivative, and `deriv`
 for the univariate one.
 -/
 import tactic.interactive order.filter topology.basic analysis.normed_space.bounded_linear_maps
+import .asymptotics
 universe u
 
 /- move this stuff -/
 
--- note: in module.lean, theorems for linear maps should be *unbundled*. Here
+-- note: in module.lean, there should also be unbundled theorems for linear maps. Here
 -- is an example.
 
 namespace is_linear_map
@@ -19,11 +20,6 @@ variables {α : Type*} {β : Type*} {γ : Type*}
 variables [ring α] [add_comm_group β] [add_comm_group γ]
 variables [module α β] [module α γ]
 include α
-
---def mk' (f : β → γ) (H : is_linear_map α f) : β →ₗ γ := {to_fun := f, ..H}
-
---[simp] theorem mk'_apply {f : β → γ} (H : is_linear_map α f) (x : β) :
---  mk' f H x = f x := rfl
 
 @[simp] theorem map_zero {f : β → γ} (h : is_linear_map α f) : f 0 = 0 :=
 (mk' _ h).map_zero
@@ -84,6 +80,10 @@ tendsto_smul tendsto_const_nhds
 
 end 
 
+-- deriv begins here
+
+open asymptotics
+
 variables {E : Type*} [normed_space ℝ E]
 variables {F : Type*} [normed_space ℝ F]
 
@@ -93,6 +93,37 @@ is_bounded_linear_map f' ∧
 
 def has_fderiv_at (f : E → F) (f' : E → F) (x : E) :=
 has_fderiv_at_within f f' x set.univ
+
+theorem has_fderiv_equiv_aux (f : E → F) (f' : E → F) (x : E) (s : set E) 
+    (bf' : is_bounded_linear_map f') :
+  tendsto (λ x', ∥x' - x∥⁻¹ • (f x' - f x - f' (x' - x))) (nhds_within x s) (nhds 0) = 
+  tendsto (λ x', ∥x' - x∥⁻¹ * ∥f x' - f x - f' (x' - x)∥) (nhds_within x s) (nhds 0) :=
+begin
+  have f'0 : f' 0 = 0 := bf'.to_is_linear_map.map_zero,
+  rw [tendsto_iff_norm_tendsto_zero], congr,
+  ext x',
+  have : ∥x' + -x∥⁻¹ ≥ 0, from inv_nonneg.mpr (norm_nonneg _),
+  simp [norm_smul, real.norm_eq_abs, abs_of_nonneg this]
+end
+
+theorem has_fderiv_iff_littleo {f : E → F} {f' : E → F} {x : E} {s : set E} :
+  has_fderiv_at_within f f' x s ↔
+    is_bounded_linear_map f' ∧ 
+      is_littleo (λ x', ∥f x' - f x - f' (x' - x)∥) (λ x', ∥x' - x∥) (nhds_within x s) :=
+and.congr_right_iff.mpr $
+  assume bf' : is_bounded_linear_map f',
+  have f'0 : f' 0 = 0 := bf'.to_is_linear_map.map_zero,
+  have h : ∀ x', ∥x' - x∥ = 0 → ∥f x' - f x - f' (x' - x)∥ = 0, from
+    assume x' hx',
+    have x' = x, 
+      from eq_of_sub_eq_zero ((norm_eq_zero _).mp hx'),
+    by rw this; simp [f'0],
+  begin
+    rw has_fderiv_equiv_aux _ _ _ _ bf',
+    rw is_littleo_iff h,
+    apply iff_of_eq, congr, ext x', 
+    apply mul_comm
+  end
 
 def has_fderiv_at_within_mono {f : E → F} {f' : E → F} {x : E} {s t : set E} 
     (h : has_fderiv_at_within f f' x t) (hst : s ⊆ t) :
