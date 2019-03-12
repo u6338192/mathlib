@@ -36,7 +36,7 @@ hs ← at_.get_locals, hs.mmap' (λ h, simp_hyp sls [] h cfg discharger >> skip)
 when at_.include_goal (simp_target sls [] cfg discharger)
 
 meta def split_if1 (c : expr) (n : name) (at_ : loc) : tactic unit :=
-by_cases c n; reduce_ifs_at at_
+by_cases c n; try (do e ← get_local n, subst e); reduce_ifs_at at_
 
 private meta def get_next_name (names : ref (list name)) : tactic name := do
 ns ← read_ref names,

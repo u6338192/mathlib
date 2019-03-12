@@ -16,3 +16,11 @@ by split_ifs; simp *
 
 example : true :=
 by success_if_fail { split_ifs }; trivial
+
+example (n : ℕ) : if n = 3 then n = 3 else true :=
+begin
+  split_ifs,
+  guard_target (3 = 3),
+  refl,
+  trivial
+end

@@ -733,7 +733,7 @@ begin
   induction l with b l ih,
   { exact iff_of_true rfl (not_mem_nil _) },
   simp only [length, mem_cons_iff, index_of_cons], split_ifs,
-  { exact iff_of_false (by rintro ⟨⟩) (λ H, H $ or.inl h) },
+  { exact iff_of_false (by rintro ⟨⟩) (λ H, H $ or.inl rfl) },
   { simp only [h, false_or], rw ← ih, exact succ_inj' }
 end
 
@@ -2733,6 +2733,18 @@ theorem map_foldl_erase [decidable_eq β] {f : α → β} (finj : injective f) {
   map f (foldl list.erase l₁ l₂) = foldl (λ l a, l.erase (f a)) (map f l₁) l₂ :=
 by induction l₂ generalizing l₁; [refl,
 simp only [foldl_cons, map_erase finj, *]]
+
+lemma count_erase {a b : α} : ∀ (s : list α), count a (s.erase b) = if a = b then pred (count a s) else count a s
+| [] := by simp
+| (x :: xs) :=
+begin
+  rw erase_cons,
+  -- split_ifs with h₁ h₂,
+  -- replace h₁ := h₁.symm,
+  -- subst h₁, -- subst could try harder ...
+  -- rw h₂,
+  -- simp,
+end
 
 @[simp] theorem count_erase_self (a : α) : ∀ (s : list α), count a (list.erase s a) = pred (count a s)
 | [] := by simp

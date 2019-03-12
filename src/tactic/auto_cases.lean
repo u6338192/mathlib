@@ -12,6 +12,8 @@ meta def auto_cases_at (h : expr) : tactic string :=
 do t' ← infer_type h,
   t' ← whnf t',
   let use_cases := match t' with
+  | `(false)     := tt
+  | `(true)      := tt
   | `(empty)     := tt
   | `(pempty)    := tt
   | `(unit)      := tt
@@ -35,7 +37,8 @@ do t' ← infer_type h,
     match t' with
     -- `cases` can be dangerous on `eq` and `quot`, producing mysterious errors during type checking.
     -- instead we attempt `induction`
-    | `(eq _ _)        := do induction h, pp ← pp h, return ("induction " ++ pp.to_string)
+    | `(eq _ _)        := (do subst h,     pp ← pp h, return ("induction " ++ pp.to_string)) <|>
+                          (do induction h, pp ← pp h, return ("induction " ++ pp.to_string))
     | `(quot _)        := do induction h, pp ← pp h, return ("induction " ++ pp.to_string)
     | _                := failed
     end
