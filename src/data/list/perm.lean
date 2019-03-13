@@ -239,6 +239,7 @@ begin
   { exact assume ⟨l₂, h₁₂, h₂₃⟩, perm_comp_forall₂ h₁₂ h₂₃ }
 end
 
+local infixr ⇒ := relator.lift_fun
 lemma rel_perm_imp (hr : right_unique r) : (forall₂ r ⇒ forall₂ r ⇒ implies) perm perm :=
 assume a b h₁ c d h₂ h,
 have (flip (forall₂ r) ∘r (perm ∘r forall₂ r)) b d, from ⟨a, h₁, c, h, h₂⟩,
@@ -251,7 +252,7 @@ this ▸ hbd
 lemma rel_perm (hr : bi_unique r) : (forall₂ r ⇒ forall₂ r ⇒ (↔)) perm perm :=
 assume a b hab c d hcd, iff.intro
   (rel_perm_imp hr.2 hab hcd)
-  (rel_perm_imp (assume a b c, left_unique_flip hr.1) hab.flip hcd.flip)
+  (rel_perm_imp (left_unique_flip hr.1) hab.flip hcd.flip)
 
 end rel
 

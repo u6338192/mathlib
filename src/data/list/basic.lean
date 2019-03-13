@@ -2359,7 +2359,7 @@ lemma right_unique_forall₂ (hr : right_unique r) : right_unique (forall₂ r)
   hr ha₀ ha₁ ▸ right_unique_forall₂ h₀ h₁ ▸ rfl
 
 lemma bi_unique_forall₂ (hr : bi_unique r) : bi_unique (forall₂ r) :=
-⟨assume a b c, left_unique_forall₂ hr.1, assume a b c, right_unique_forall₂ hr.2⟩
+⟨left_unique_forall₂ hr.1, right_unique_forall₂ hr.2⟩
 
 theorem forall₂_length_eq {R : α → β → Prop} :
   ∀ {l₁ l₂}, forall₂ R l₁ l₂ → length l₁ = length l₂
@@ -2404,9 +2404,10 @@ theorem forall₂_drop_append {R : α → β → Prop} (l : list α) (l₁ : lis
 have h': forall₂ R (drop (length l₁) l) (drop (length l₁) (l₁ ++ l₂)), from forall₂_drop (length l₁) h,
 by rwa [drop_left] at h'
 
+local infixr ⇒ := relator.lift_fun
 lemma rel_mem (hr : bi_unique r) : (r ⇒ forall₂ r ⇒ iff) (∈) (∈)
 | a b h [] [] forall₂.nil := by simp only [not_mem_nil]
-| a b h (a'::as) (b'::bs) (forall₂.cons h₁ h₂) := rel_or (rel_eq hr h h₁) (rel_mem h h₂)
+| a b h (a'::as) (b'::bs) (forall₂.cons h₁ h₂) := rel_or (rel_eq r h h₁) (rel_mem h h₂)
 
 lemma rel_map : ((r ⇒ p) ⇒ forall₂ r ⇒ forall₂ p) map map
 | f g h [] [] forall₂.nil := forall₂.nil
@@ -2487,6 +2488,7 @@ end
 theorem mem_sections_length {L : list (list α)} {f} (h : f ∈ sections L) : length f = length L :=
 forall₂_length_eq (mem_sections.1 h)
 
+local infixr ⇒ := relator.lift_fun
 lemma rel_sections {r : α → β → Prop} : (forall₂ (forall₂ r) ⇒ forall₂ (forall₂ r)) sections sections
 | _ _ forall₂.nil := forall₂.cons forall₂.nil forall₂.nil
 | _ _ (forall₂.cons h₀ h₁) :=

@@ -1958,6 +1958,7 @@ begin
   case rel.cons : a b s t hab hst ih { simpa using hab.add ih }
 end
 
+local infixr ⇒ := relator.lift_fun
 lemma rel_map {p : γ → δ → Prop} {s t} {f : α → γ} {g : β → δ} (h : (r ⇒ p) f g) (hst : rel r s t) :
   rel p (s.map f) (t.map g) :=
 by rw [rel_map_left, rel_map_right]; exact hst.mono (assume a b, h)
