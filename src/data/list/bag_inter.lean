@@ -9,6 +9,19 @@ open nat
 
 variables {α : Type*} [decidable_eq α]
 
+lemma count_erase {a b : α} : ∀ (s : list α), count a (s.erase b) = if a = b then pred (count a s) else count a s
+| [] := by simp
+| (x :: xs) :=
+begin
+  rw erase_cons,
+  -- split_ifs with h₁ h₂,
+  -- replace h₁ := h₁.symm,
+  -- subst h₁, -- subst could try harder ...
+  -- rw h₂,
+  -- simp,
+  sorry,
+end
+
 local attribute [simp] min_succ_succ count_cons erase_cons count_erase
 
 lemma foo {a : α} {L : list α} (h : a ∈ L) (n : ℕ) : succ (min n (pred (count a L))) = min (succ n) (count a L) :=

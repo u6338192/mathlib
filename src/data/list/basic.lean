@@ -2734,18 +2734,6 @@ theorem map_foldl_erase [decidable_eq β] {f : α → β} (finj : injective f) {
 by induction l₂ generalizing l₁; [refl,
 simp only [foldl_cons, map_erase finj, *]]
 
-lemma count_erase {a b : α} : ∀ (s : list α), count a (s.erase b) = if a = b then pred (count a s) else count a s
-| [] := by simp
-| (x :: xs) :=
-begin
-  rw erase_cons,
-  -- split_ifs with h₁ h₂,
-  -- replace h₁ := h₁.symm,
-  -- subst h₁, -- subst could try harder ...
-  -- rw h₂,
-  -- simp,
-end
-
 @[simp] theorem count_erase_self (a : α) : ∀ (s : list α), count a (list.erase s a) = pred (count a s)
 | [] := by simp
 | (h :: t) :=
