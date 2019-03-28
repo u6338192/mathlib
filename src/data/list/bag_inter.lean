@@ -33,34 +33,37 @@ end
 
 open tactic
 
-@[simp] theorem count_bag_inter' {a : α} :
-  ∀ {l₁ l₂ : list α}, count a (l₁.bag_inter l₂) = min (count a l₁) (count a l₂)
-| []         l₂ := by simp
-| l₁         [] := by simp
-| (h₁ :: l₁) (h₂ :: l₂) :=
-begin
-  simp only [list.bag_inter],
-  dsimp at *,
-  tactic.tidy.simp_non_aux,
-  split_ifs,
-  tactic.tidy.simp_non_aux,
-  split_ifs,
-  refl,
-  simp,
-  split_ifs,
-  { tidy? },
-  { tidy? },
-  -- tidy?,
+-- FIXME This isn't working, because tidy is reverting and introducing stuff that breaks the induction
 
-  rw foo h,
+-- @[simp] theorem count_bag_inter' {a : α} :
+--   ∀ {l₁ l₂ : list α}, count a (l₁.bag_inter l₂) = min (count a l₁) (count a l₂)
+-- | []         l₂ := by simp
+-- | l₁         [] := by simp
+-- | (h₁ :: l₁) (h₂ :: l₂) :=
+-- begin
+--   simp only [list.bag_inter],
+--   dsimp at *,
+--   tactic.tidy.simp_non_aux,
+--   split_ifs,
+--   tactic.tidy.simp_non_aux,
+--   simp,
+--   split_ifs,
+--   { tidy? },
+--   { tidy? },
+--   -- tidy?,
 
-  rw decidable.not_or_iff_and_not at h,
-  have w : a ∉ l₂ := h.right,
-  rw count_eq_zero_of_not_mem w,
-  simp,
-  -- sorry,
-  -- sorry,
-end
--- using_well_founded
--- { rel_tac := λ _ _, tactic.apply_instance,
---   dec_tac := tactic.target >>= tactic.trace >> tactic.assumption, }
+--   -- rw foo h,
+
+--   sorry,
+--   sorry,
+--   sorry,
+
+--   rw decidable.not_or_iff_and_not at h,
+--   have w : a ∉ l₂ := h.right,
+--   rw count_eq_zero_of_not_mem w,
+--   simp,
+--   sorry,
+--   sorry,
+--   sorry,
+--   sorry,
+-- end
