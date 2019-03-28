@@ -237,7 +237,7 @@ theorem kreplace_of_forall_not (a : α) (b : β a) {l : list (sigma β)}
   (H : ∀ b : β a, sigma.mk a b ∉ l) : kreplace a b l = l :=
 lookmap_of_forall_not _ $ begin
   rintro ⟨a', b'⟩ h, dsimp, split_ifs,
-  { subst a', exact H _ h }, {refl}
+  { exact H _ h }, {refl}
 end
 
 theorem kreplace_self {a : α} {b : β a} {l : list (sigma β)}
@@ -246,16 +246,16 @@ begin
   refine (lookmap_congr _).trans
     (lookmap_id' (option.guard (λ s, a = s.1)) _ _),
   { rintro ⟨a', b'⟩ h', dsimp [option.guard], split_ifs,
-    { subst a', exact ⟨rfl, heq_of_eq $ nd.eq_of_mk_mem h h'⟩ },
+    { exact ⟨rfl, heq_of_eq $ nd.eq_of_mk_mem h h'⟩ },
     { refl } },
   { rintro ⟨a₁, b₁⟩ ⟨a₂, b₂⟩, dsimp [option.guard], split_ifs,
-    { subst a₁, rintro ⟨⟩, simp }, { rintro ⟨⟩ } },
+    { rintro ⟨⟩, simp }, { rintro ⟨⟩ } },
 end
 
 theorem keys_kreplace (a : α) (b : β a) : ∀ l : list (sigma β),
   (kreplace a b l).keys = l.keys :=
-lookmap_map_eq _ _ $ by rintro ⟨a₁, b₂⟩ ⟨a₂, b₂⟩;
-  dsimp; split_ifs; simp [h] {contextual := tt}
+lookmap_map_eq _ _ $ by { rintro ⟨a₁, b₂⟩ ⟨a₂, b₂⟩;
+  dsimp; split_ifs, simp {contextual := tt}, simp [h] {contextual := tt} }
 
 theorem kreplace_nodupkeys (a : α) (b : β a) {l : list (sigma β)} :
   (kreplace a b l).nodupkeys ↔ l.nodupkeys :=
@@ -268,7 +268,7 @@ perm_lookmap _ $ begin
   refine (nodupkeys_iff_pairwise.1 nd).imp _,
   intros x y h z h₁ w h₂,
   split_ifs at h₁ h₂; cases h₁; cases h₂,
-  exact (h (h_2.symm.trans h_1)).elim
+  exact (h (h_1.symm)).elim
 end
 
 /- kerase -/

@@ -319,7 +319,7 @@ dif_neg h
 @[simp] theorem dwrite_self
   {K} [decidable_eq K] {C : K → Type*}
   (S : ∀ k, C k) (k) : dwrite S k (S k) = S :=
-funext $ λ k', by unfold dwrite; split_ifs; [subst h, refl]
+funext $ λ k', by unfold dwrite; split_ifs; refl
 
 namespace TM0
 
@@ -338,7 +338,7 @@ inductive stmt
   the tape head `a : Γ`, either halts (returns `none`) or returns
   a new state `q' : Λ` and a `stmt` describing what to do,
   either a move left or right, or a write command.
-  
+
   Both `Λ` and `Γ` are required to be inhabited; the default value
   for `Γ` is the "blank" tape value, and the default value of `Λ` is
   the initial state. -/
@@ -421,7 +421,7 @@ def machine.map : machine Γ' Λ'
 theorem machine.map_step {S} (ss : supports M S)
   [pointed_map f₁] (f₂₁ : function.right_inverse f₁ f₂)
   (g₂₁ : ∀ q ∈ S, g₂ (g₁ q) = q) :
-  ∀ c : cfg Γ Λ, c.q ∈ S → 
+  ∀ c : cfg Γ Λ, c.q ∈ S →
     (step M c).map (cfg.map f₁ g₁) =
     step (M.map f₁ f₂ g₁ g₂) (cfg.map f₁ g₁ c)
 | ⟨q, T⟩ h := begin
@@ -976,7 +976,7 @@ fun_respects.2 $ λ ⟨l₁, v, (a, L, R)⟩, begin
     change (tape.mk' L R).1 with R.head,
     cases p R.head v; [apply IH₂, apply IH₁] },
   case TM1.stmt.goto : l {
-    simp only [tr_normal, step_aux_read enc dec enc0 encdec, step_aux], 
+    simp only [tr_normal, step_aux_read enc dec enc0 encdec, step_aux],
     apply refl_trans_gen.refl },
   case TM1.stmt.halt {
     simp only [tr_normal, step_aux, tr_cfg, step_aux_move enc enc0,
@@ -1304,11 +1304,11 @@ instance stackel.inhabited (k) : inhabited (stackel k) :=
 
 def stackel.is_bottom {k} : stackel k → bool
 | (stackel.bottom _) := tt
-| _ := ff 
+| _ := ff
 
 def stackel.is_top {k} : stackel k → bool
 | (stackel.top _) := tt
-| _ := ff 
+| _ := ff
 
 def stackel.get {k} : stackel k → option (Γ k)
 | (stackel.val a) := some a

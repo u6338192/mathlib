@@ -234,7 +234,7 @@ variables [decidable_eq α] [decidable_eq β]
 def erase [has_zero β] (a : α) (f : α →₀ β) : α →₀ β :=
 ⟨f.support.erase a, (λa', if a' = a then 0 else f a'),
   assume a', by rw [mem_erase, mem_support_iff]; split_ifs;
-    [exact ⟨λ H _, H.1 h, λ H, (H rfl).elim⟩,
+    [exact ⟨λ H _, H.1 rfl, λ H, (H rfl).elim⟩,
     exact and_iff_right h]⟩
 
 @[simp] lemma support_erase [has_zero β] {a : α} {f : α →₀ β} :

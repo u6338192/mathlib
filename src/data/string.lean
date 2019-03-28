@@ -41,7 +41,7 @@ instance decidable_lt : @decidable_rel string (<) := by apply_instance
     { dsimp [iterator.has_next,
         iterator.curr, iterator.next],
       split_ifs,
-      { subst b, exact IH.trans list.lex.cons_iff.symm },
+      { exact IH.trans list.lex.cons_iff.symm },
       { simp, refine ⟨list.lex.rel, λ e, _⟩,
         cases e, {cases h rfl}, assumption } }
   end

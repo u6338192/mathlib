@@ -135,10 +135,10 @@ using_well_founded {dec_tac := tactic.assumption,
 by rw gcd; exact if_pos rfl
 
 @[simp] theorem gcd_zero_right (a : α) : gcd a 0 = a :=
-by rw gcd; split_ifs; simp only [h, zero_mod, gcd_zero_left]
+by { rw gcd; split_ifs, refl, simp only [zero_mod, gcd_zero_left] }
 
 theorem gcd_val (a b : α) : gcd a b = gcd (b % a) a :=
-by rw gcd; split_ifs; [simp only [h, mod_zero, gcd_zero_right], refl]
+by rw gcd; split_ifs; [simp only [mod_zero, gcd_zero_right], refl]
 
 @[elab_as_eliminator]
 theorem gcd.induction {P : α → α → Prop} : ∀ a b : α,

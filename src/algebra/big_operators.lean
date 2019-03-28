@@ -631,7 +631,7 @@ multiset.induction_on s rfl
     calc (to_finset (a :: s)).sum (λx, count x (a :: s)) =
       (to_finset (a :: s)).sum (λx, (if x = a then 1 else 0) + count x s) :
         finset.sum_congr rfl $ λ _ _, by split_ifs;
-        [simp only [h, count_cons_self, nat.one_add], simp only [count_cons_of_ne h, zero_add]]
+        [simp only [count_cons_self, nat.one_add], simp only [count_cons_of_ne h, zero_add]]
       ... = card (a :: s) :
       begin
         by_cases a ∈ s.to_finset,
