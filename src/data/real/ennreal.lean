@@ -143,10 +143,10 @@ protected lemma lt_top_iff_ne_top : a < ∞ ↔ a ≠ ∞ := lt_top_iff_ne_top
 protected lemma bot_lt_iff_ne_bot : 0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
 
 lemma mul_top : a * ∞ = (if a = 0 then 0 else ∞) :=
-begin split_ifs, { simp [h] }, { exact with_top.mul_top h } end
+by split_ifs; [ simp, exact with_top.mul_top h ]
 
 lemma top_mul : ∞ * a = (if a = 0 then 0 else ∞) :=
-begin split_ifs, { simp [h] }, { exact with_top.top_mul h } end
+by split_ifs; [ simp, exact with_top.top_mul h ]
 
 @[simp] lemma top_mul_top : ∞ * ∞ = ∞ := with_top.top_mul_top
 

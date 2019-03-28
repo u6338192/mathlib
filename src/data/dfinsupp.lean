@@ -395,7 +395,7 @@ ext $ λ i, by simp only [smul_apply, mk_apply]; split_ifs; [refl, rw smul_zero]
 
 @[simp] lemma single_smul {i : ι} {c : γ} {x : β i} :
   single i (c • x) = c • single i x :=
-ext $ λ i, by simp only [smul_apply, single_apply]; split_ifs; [cases h, rw smul_zero]; refl
+ext $ λ i, by { simp only [smul_apply, single_apply], split_ifs; [refl, rw smul_zero] }
 
 variable β
 def lmk (s : finset ι) : (Π i : (↑s : set ι), β i.1) →ₗ[γ] Π₀ i, β i :=
