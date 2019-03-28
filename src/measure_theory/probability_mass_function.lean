@@ -35,7 +35,7 @@ def pure (a : α) : pmf α := ⟨λa', if a' = a then 1 else 0, is_sum_ite_eq _ 
 instance [inhabited α] : inhabited (pmf α) := ⟨pure (default α)⟩
 
 lemma coe_le_one (p : pmf α) (a : α) : p a ≤ 1 :=
-is_sum_le (by intro b; split_ifs; simp [h]; exact le_refl _) (is_sum_ite_eq a (p a)) p.2
+is_sum_le (by { intro b, split_ifs; [exact le_refl _, simp] }) (is_sum_ite_eq a (p a)) p.2
 
 protected lemma bind.has_sum (p : pmf α) (f : α → pmf β) (b : β) : has_sum (λa:α, p a * f a b) :=
 begin
@@ -61,12 +61,12 @@ eq.trans (ennreal.tsum_coe $ bind.has_sum p f b).symm $ by simp
 
 @[simp] lemma pure_bind (a : α) (f : α → pmf β) : (pure a).bind f = f a :=
 have ∀b a', ite (a' = a) 1 0 * f a' b = ite (a' = a) (f a b) 0, from
-  assume b a', by split_ifs; simp; subst h; simp,
-by ext b; simp [this]
+  assume b a', by { split_ifs, simp, simp },
+by {ext b, simp [this]}
 
 @[simp] lemma bind_pure (p : pmf α) : p.bind pure = p :=
 have ∀a a', (p a * ite (a' = a) 1 0) = ite (a = a') (p a') 0, from
-  assume a a', begin split_ifs; try { subst a }; try { subst a' }; simp * at * end,
+  assume a a', begin split_ifs; simp * at *, end,
 by ext b; simp [this]
 
 @[simp] lemma bind_bind (p : pmf α) (f : α → pmf β) (g : β → pmf γ) :
