@@ -144,7 +144,7 @@ lemma is_colimit_eq_iff {i j : J} {xi : F.obj i} {xj : F.obj j} :
   t.ι.app i xi = t.ι.app j xj ↔ ∃ k (f : i ⟶ k) (g : j ⟶ k), F.map f xi = F.map g xj :=
 let t' := colimit.cocone F,
     e : t' ≅ t := is_colimit.unique (colimit.is_colimit F) ht,
-    e' : t'.X ≅ t.X := cocones.forget.on_iso e in
+    e' : t'.X ≅ t.X := cocones.forget.map_iso e in
 begin
   refine iff.trans _ (colimit_eq_iff F),
   convert equiv.apply_eq_iff_eq e'.to_equiv _ _; rw ←e.hom.w; refl
