@@ -9,6 +9,9 @@ open category_theory
 open category_theory.instances
 open topological_space
 
+-- FIXME ideally we shouldn't be using this
+lemma coe_val {X Y : Top.{v}} (f : X ⟶ Y) (x : X) : f x = f.val x := rfl
+
 variables (C : Type u) [𝒞 : category.{v+1} C]
 include 𝒞
 
@@ -53,7 +56,7 @@ def comp (F G H : PresheafedSpace.{v} C) (α : hom F G) (β : hom G H) : hom F H
 variables (C)
 
 section
-local attribute [simp] id comp presheaf_on_space.pushforward
+local attribute [simp] id comp presheaf_on_space.pushforward coe_val
 
 instance category_of_PresheafedSpaces : category (PresheafedSpace.{v} C) :=
 { hom  := hom,
