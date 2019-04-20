@@ -18,7 +18,8 @@ protected def cast : ℕ → α
 | 0     := 0
 | (n+1) := cast n + 1
 
-@[priority 0] instance cast_coe : has_coe ℕ α := ⟨nat.cast⟩
+@[priority 0] def cast_coe : has_coe ℕ α := ⟨nat.cast⟩
+local attribute [instance] cast_coe
 
 @[simp] theorem cast_zero : ((0 : ℕ) : α) = 0 := rfl
 
