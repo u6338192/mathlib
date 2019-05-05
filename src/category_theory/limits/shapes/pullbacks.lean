@@ -8,13 +8,6 @@ import category_theory.sparse
 
 open category_theory
 
-namespace tactic
-meta def case_bash : tactic unit :=
-do l ← local_context,
-   r ← successes (l.reverse.map (λ h, cases h >> skip)),
-   when (r.empty) failed
-end tactic
-
 namespace category_theory.limits
 
 universes v u
@@ -26,62 +19,67 @@ local attribute [tidy] tactic.case_bash
 @[derive decidable_eq] inductive walking_span : Type v
 | zero | left | right
 
-open walking_cospan
-open walking_span
+namespace walking_cospan
 
-inductive walking_cospan_hom : walking_cospan → walking_cospan → Type v
-| inl : walking_cospan_hom left one
-| inr : walking_cospan_hom right one
-| id : Π X : walking_cospan.{v}, walking_cospan_hom X X
-inductive walking_span_hom : walking_span → walking_span → Type v
-| fst : walking_span_hom zero left
-| snd : walking_span_hom zero right
-| id : Π X : walking_span.{v}, walking_span_hom X X
+inductive hom : walking_cospan → walking_cospan → Type v
+| inl : hom left one
+| inr : hom right one
+| id : Π X : walking_cospan.{v}, hom X X
 
-open walking_cospan_hom
-open walking_span_hom
+open hom
 
-def walking_cospan_comp :
-  Π (X Y Z : walking_cospan) (f : walking_cospan_hom X Y) (g : walking_cospan_hom Y Z),
-    walking_cospan_hom X Z
+def hom.comp : Π (X Y Z : walking_cospan) (f : hom X Y) (g : hom Y Z), hom X Z
 | _ _ _ (id _) h := h
 | _ _ _ inl    (id one) := inl
 | _ _ _ inr    (id one) := inr
 .
 
-def walking_span_comp :
-  Π (X Y Z : walking_span) (f : walking_span_hom X Y) (g : walking_span_hom Y Z),
-    walking_span_hom X Z
+instance category_struct : category_struct walking_cospan :=
+{ hom  := hom,
+  id   := hom.id,
+  comp := hom.comp, }
+
+instance (X Y : walking_cospan) : subsingleton (X ⟶ Y) := by tidy
+
+-- We make this a @[simp] lemma later; if we do it now there's a mysterious
+-- failure in `cospan`, below.
+lemma hom_id (X : walking_cospan.{v}) : hom.id X = 𝟙 X := rfl
+
+instance : small_category.{v+1} walking_cospan.{v} := sparse_category
+
+end walking_cospan
+
+namespace walking_span
+
+inductive hom : walking_span → walking_span → Type v
+| fst : hom zero left
+| snd : hom zero right
+| id : Π X : walking_span.{v}, hom X X
+
+open hom
+
+def hom.comp : Π (X Y Z : walking_span) (f : hom X Y) (g : hom Y Z), hom X Z
   | _ _ _ (id _) h := h
   | _ _ _ fst    (id left) := fst
   | _ _ _ snd    (id right) := snd
 .
 
-instance walking_cospan_category_struct : category_struct walking_cospan :=
-{ hom  := walking_cospan_hom,
-  id   := walking_cospan_hom.id,
-  comp := walking_cospan_comp, }
+instance category_struct : category_struct walking_span :=
+{ hom  := hom,
+  id   := hom.id,
+  comp := hom.comp }
 
-instance walking_cospan_sparse (X Y : walking_cospan) : subsingleton (X ⟶ Y) :=
-begin
-  cases X; cases Y; { split, intros, cases a; cases b; refl },
-end
+instance (X Y : walking_span) : subsingleton (X ⟶ Y) := by tidy
 
-instance walking_span_category_struct : category_struct walking_span :=
-{ hom  := walking_span_hom,
-  id   := walking_span_hom.id,
-  comp := walking_span_comp }
+-- We make this a @[simp] lemma later; if we do it now there's a mysterious
+-- failure in `span`, below.
+lemma hom_id (X : walking_span.{v}) : hom.id X = 𝟙 X := rfl
 
-instance walking_span_sparse (X Y : walking_span) : subsingleton (X ⟶ Y) :=
-begin
-  cases X; cases Y; { split, intros, cases a; cases b; refl },
-end
+instance : small_category.{v+1} walking_span.{v} := sparse_category
 
-lemma walking_cospan_hom_id (X : walking_cospan.{v}) : walking_cospan_hom.id X = 𝟙 X := rfl
-lemma walking_span_hom_id (X : walking_span.{v}) : walking_span_hom.id X = 𝟙 X := rfl
+end walking_span
 
-instance walking_cospan_category : small_category.{v+1} walking_cospan.{v} := sparse_category
-instance walking_span_category : small_category.{v+1} walking_span.{v} := sparse_category
+open walking_span walking_cospan walking_span.hom walking_cospan.hom
 
 variables {C : Sort u} [𝒞 : category.{v+1} C]
 include 𝒞
@@ -125,26 +123,26 @@ def span {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z) : walking_span.{v} ⥤ C :=
   (span f g).obj walking_span.zero = X := rfl
 
 @[simp] lemma cospan_map_inl {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z) :
-  (cospan f g).map walking_cospan_hom.inl = f := rfl
+  (cospan f g).map walking_cospan.hom.inl = f := rfl
 @[simp] lemma span_map_fst {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z) :
-  (span f g).map walking_span_hom.fst = f := rfl
+  (span f g).map walking_span.hom.fst = f := rfl
 
 @[simp] lemma cospan_map_inr {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z) :
-  (cospan f g).map walking_cospan_hom.inr = g := rfl
+  (cospan f g).map walking_cospan.hom.inr = g := rfl
 @[simp] lemma span_map_snd {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z) :
-  (span f g).map walking_span_hom.snd = g := rfl
+  (span f g).map walking_span.hom.snd = g := rfl
 
 @[simp] lemma cospan_map_id {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z) (w : walking_cospan) :
-  (cospan f g).map (walking_cospan_hom.id w) = 𝟙 _ := rfl
+  (cospan f g).map (walking_cospan.hom.id w) = 𝟙 _ := rfl
 @[simp] lemma span_map_id {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z) (w : walking_span) :
-  (span f g).map (walking_span_hom.id w) = 𝟙 _ := rfl
+  (span f g).map (walking_span.hom.id w) = 𝟙 _ := rfl
 
 
 variables {X Y Z : C}
 
-attribute [simp] walking_cospan_hom_id walking_span_hom_id
+attribute [simp] walking_cospan.hom_id walking_span.hom_id
 
-def pullback_cone (f : X ⟶ Z) (g : Y ⟶ Z) := cone (cospan f g)
+abbreviation pullback_cone (f : X ⟶ Z) (g : Y ⟶ Z) := cone (cospan f g)
 
 namespace pullback_cone
 variables {f : X ⟶ Z} {g : Y ⟶ Z}
@@ -152,22 +150,20 @@ variables {f : X ⟶ Z} {g : Y ⟶ Z}
 def π₁ (t : pullback_cone f g) : t.X ⟶ X := t.π.app left
 def π₂ (t : pullback_cone f g) : t.X ⟶ Y := t.π.app right
 
-def mk {W : C} (π₁ : W ⟶ X) (π₂ : W ⟶ Y)
-  (eq : π₁ ≫ f = π₂ ≫ g) :
-  pullback_cone f g :=
+def mk {W : C} (π₁ : W ⟶ X) (π₂ : W ⟶ Y) (eq : π₁ ≫ f = π₂ ≫ g) : pullback_cone f g :=
 { X := W,
   π :=
   { app := λ j, walking_cospan.cases_on j π₁ π₂ (π₁ ≫ f),
-    naturality' := λ j j' f, begin cases f; obviously end } }
+    naturality' := λ j j' f, by cases f; obviously } }
 
-def condition (t : pullback_cone f g) : (π₁ t) ≫ f = (π₂ t) ≫ g :=
+lemma condition (t : pullback_cone f g) : (π₁ t) ≫ f = (π₂ t) ≫ g :=
 begin
   erw [t.w inl, ← t.w inr], refl
 end
 
 end pullback_cone
 
-def pushout_cocone (f : X ⟶ Y) (g : X ⟶ Z) := cocone (span f g)
+abbreviation pushout_cocone (f : X ⟶ Y) (g : X ⟶ Z) := cocone (span f g)
 
 namespace pushout_cocone
 
@@ -176,15 +172,13 @@ variables {f : X ⟶ Y} {g : X ⟶ Z}
 def ι₁ (t : pushout_cocone f g) : Y ⟶ t.X := t.ι.app left
 def ι₂ (t : pushout_cocone f g) : Z ⟶ t.X := t.ι.app right
 
-def mk {W : C} (ι₁ : Y ⟶ W) (ι₂ : Z ⟶ W)
-  (eq : f ≫ ι₁ = g ≫ ι₂) :
-  pushout_cocone f g :=
+def mk {W : C} (ι₁ : Y ⟶ W) (ι₂ : Z ⟶ W) (eq : f ≫ ι₁ = g ≫ ι₂) : pushout_cocone f g :=
 { X := W,
   ι :=
   { app := λ j, walking_span.cases_on j (f ≫ ι₁) ι₁ ι₂,
     naturality' := λ j j' f, by cases f; obviously } }
 
-def condition (t : pushout_cocone f g) : f ≫ (ι₁ t) = g ≫ (ι₂ t) :=
+lemma condition (t : pushout_cocone f g) : f ≫ (ι₁ t) = g ≫ (ι₂ t) :=
 begin
   erw [t.w fst, ← t.w snd], refl
 end
@@ -226,8 +220,7 @@ def cocone.of_pushout_cocone
 def pullback_cone.of_cone
   {F : walking_cospan.{v} ⥤ C} (t : cone F) : pullback_cone (F.map inl) (F.map inr) :=
 { X := t.X,
-  π :=
-  { app := λ j, t.π.app j ≫ eq_to_hom (by tidy) } }
+  π := { app := λ j, t.π.app j ≫ eq_to_hom (by tidy) } }
 
 @[simp] lemma pullback_cone.of_cone_π {F : walking_cospan.{v} ⥤ C} (t : cone F) (j) :
   (pullback_cone.of_cone t).π.app j = t.π.app j ≫ eq_to_hom (by tidy) := rfl
@@ -235,8 +228,7 @@ def pullback_cone.of_cone
 def pushout_cocone.of_cocone
   {F : walking_span.{v} ⥤ C} (t : cocone F) : pushout_cocone (F.map fst) (F.map snd) :=
 { X := t.X,
-  ι :=
-  { app := λ j, eq_to_hom (by tidy) ≫ t.ι.app j } }
+  ι := { app := λ j, eq_to_hom (by tidy) ≫ t.ι.app j } }
 
 @[simp] lemma pushout_cocone.of_cocone_ι {F : walking_span.{v} ⥤ C} (t : cocone F) (j) :
   (pushout_cocone.of_cocone t).ι.app j = eq_to_hom (by tidy) ≫ t.ι.app j := rfl
