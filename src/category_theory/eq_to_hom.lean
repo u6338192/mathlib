@@ -34,15 +34,12 @@ rfl
   eq_to_iso p ≪≫ eq_to_iso q = eq_to_iso (p.trans q) :=
 by ext; simp
 
-<<<<<<< HEAD
-=======
 @[simp] lemma eq_to_hom_op (X Y : C) (h : X = Y) : (eq_to_hom h).op = eq_to_hom (congr_arg op h.symm) :=
 begin
   cases h,
   refl
 end
 
->>>>>>> master
 variables {D : Sort u'} [𝒟 : category.{v'} D]
 include 𝒟
 
