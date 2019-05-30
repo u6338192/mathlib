@@ -12,7 +12,7 @@ open cardinal nat set
 noncomputable theory
 namespace cardinal
 
-lemma mk_pnat : cardinal.mk ℕ+ = omega :=
+lemma mk_pnat : mk ℕ+ = omega :=
 begin
   rw [←mk_nat],
   apply le_antisymm,
@@ -20,7 +20,7 @@ begin
   { fapply mk_le_of_injective succ_pnat_injective }
 end
 
-lemma mk_int : cardinal.mk ℤ = omega :=
+lemma mk_int : mk ℤ = omega :=
 begin
   rw [←mk_nat],
   apply le_antisymm,
@@ -30,7 +30,7 @@ begin
   { fapply mk_le_of_injective nat.cast_injective; apply_instance }
 end
 
-lemma mk_rat : cardinal.mk ℚ = omega :=
+lemma mk_rat : mk ℚ = omega :=
 begin
   apply le_antisymm,
   { have : ∀(k : ℚ), ∃(n : ℤ × ℕ+), rat.mk_pnat n.1 n.2 = k,
@@ -38,14 +38,6 @@ begin
     have := mk_le_of_surjective this,
     rwa [←cardinal.mul_def, mk_int, mk_pnat, mul_eq_self (le_refl _)] at this },
   { rw [←mk_nat], fapply mk_le_of_injective nat.cast_injective; apply_instance }
-end
-
-lemma mk_real_le : cardinal.mk ℝ ≤ 2 ^ omega.{0} :=
-begin
-  dsimp [real],
-  apply le_trans mk_quotient_le,
-  apply le_trans mk_subtype_le,
-  rw [←power_def, mk_nat, mk_rat, power_self_eq (le_refl _)]
 end
 
 variables {c : ℝ} {f g : ℕ → bool} {n : ℕ}
@@ -141,11 +133,13 @@ begin
     apply eq_ff_of_not_eq_tt, rw [←fn], apply ne.symm, exact nat.find_spec this }
 end
 
-lemma mk_real : cardinal.mk ℝ = 2 ^ omega.{0} :=
+lemma mk_real : mk ℝ = 2 ^ omega.{0} :=
 begin
-  apply le_antisymm mk_real_le,
-  convert mk_le_of_injective (injective_cantor_function _ _),
-  rw [←power_def, mk_bool, mk_nat], exact 1 / 3, norm_num, norm_num
+  apply le_antisymm,
+  { dsimp [real], apply le_trans mk_quotient_le, apply le_trans mk_subtype_le,
+    rw [←power_def, mk_nat, mk_rat, power_self_eq (le_refl _)] },
+  { convert mk_le_of_injective (injective_cantor_function _ _),
+    rw [←power_def, mk_bool, mk_nat], exact 1 / 3, norm_num, norm_num }
 end
 
 lemma not_countable_real : ¬ countable (univ : set ℝ) :=
