@@ -8,7 +8,7 @@ The cardinality of various number systems, like pnat, int, rat and real.
 
 import data.real.basic set_theory.ordinal analysis.specific_limits
 
-open cardinal nat set
+open nat set
 noncomputable theory
 namespace cardinal
 
@@ -78,9 +78,6 @@ begin
   replace h3 : g n = tt := h3 n h, simp [h, h3]
 end
 
-lemma cantor_function_tt (h1 : 0 ≤ c) (h2 : c < 1) : cantor_function c (λ n, tt) = 1 / (1 - c) :=
-tsum_geometric h1 h2
-
 lemma cantor_function_succ (f : ℕ → bool) (h1 : 0 ≤ c) (h2 : c < 1) :
   cantor_function c f = cond (f 0) 1 0 + c * cantor_function c (λ n, f (n+1)) :=
 begin
@@ -142,7 +139,7 @@ begin
     rw [←power_def, mk_bool, mk_nat], exact 1 / 3, norm_num, norm_num }
 end
 
-lemma not_countable_real : ¬ countable (univ : set ℝ) :=
+lemma not_countable_real : ¬ countable (set.univ : set ℝ) :=
 by { rw [countable_iff, not_le, mk_univ, mk_real], apply cantor }
 
 end cardinal
