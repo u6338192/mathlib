@@ -10,7 +10,7 @@ import data.real.basic set_theory.ordinal analysis.specific_limits
 
 open cardinal nat set
 noncomputable theory
-namespace real
+namespace cardinal
 
 lemma mk_pnat : cardinal.mk ℕ+ = omega :=
 begin
@@ -151,4 +151,4 @@ end
 lemma not_countable_real : ¬ countable (univ : set ℝ) :=
 by { rw [countable_iff, not_le, mk_univ, mk_real], apply cantor }
 
-end real
+end cardinal
