@@ -6,7 +6,8 @@ Introduce UniformSpace -- the category of uniform spaces.
 -/
 import category_theory.concrete_category
 import category_theory.full_subcategory
-import topology.uniform_space.complete_separated
+import category_theory.adjunction.basic
+import topology.uniform_space.completion
 import topology.Top.basic
 
 universes u v
@@ -53,7 +54,10 @@ instance : has_coe_to_sort CpltSepUniformSpace :=
 attribute [instance] is_uniform_space is_complete_space is_separated
 
 def to_UniformSpace (X : CpltSepUniformSpace) : UniformSpace :=
-⟨X.α⟩
+⟨X⟩
+
+instance (X : CpltSepUniformSpace) : complete_space ((to_UniformSpace X).α) := CpltSepUniformSpace.is_complete_space X
+instance (X : CpltSepUniformSpace) : separated ((to_UniformSpace X).α) := CpltSepUniformSpace.is_separated X
 
 instance CpltSepUniformSpace_category : category CpltSepUniformSpace :=
 induced_category.category to_UniformSpace
@@ -70,6 +74,45 @@ instance forget_faithful : faithful forget := {}
 
 def forget_to_Type_via_UniformSpace : forget_to_UniformSpace ⋙ UniformSpace.forget ≅ forget := iso.refl _
 
-
-
 end CpltSepUniformSpace
+
+namespace UniformSpace
+
+open uniform_space
+open CpltSepUniformSpace
+
+noncomputable def completion_functor : UniformSpace ⥤ CpltSepUniformSpace :=
+{ obj := λ X, CpltSepUniformSpace.of (completion X),
+  map := λ X Y f, ⟨completion.map f.1, completion.uniform_continuous_map⟩,
+  map_comp' := λ X Y Z f g,
+  begin cases f, cases g, apply subtype.ext.2, dsimp, rw ←completion.map_comp; assumption end }.
+
+def completion_hom (X : UniformSpace) : X ⟶ forget_to_UniformSpace.obj (completion_functor.obj X) :=
+{ val := (coe : X → completion X),
+  property := completion.uniform_continuous_coe X }
+
+@[simp] lemma completion_hom_val (X : UniformSpace) :
+  (completion_hom X).val = (coe : X → completion X) := rfl
+
+noncomputable def extension_hom {X : UniformSpace} {Y : CpltSepUniformSpace} (f : X ⟶ forget_to_UniformSpace.obj Y) :
+  completion_functor.obj X ⟶ Y :=
+{ val := completion.extension f,
+  property := completion.uniform_continuous_extension }
+
+@[simp] lemma extension_hom_val {X : UniformSpace} {Y : CpltSepUniformSpace} (f : X ⟶ forget_to_UniformSpace.obj Y) :
+  (extension_hom f).val = completion.extension f := rfl.
+
+-- TODO once someone does reflexive subcategories, perhaps update this:
+noncomputable def adj : completion_functor ⊣ forget_to_UniformSpace :=
+adjunction.mk_of_hom_equiv
+begin
+  fsplit, intros, fsplit,
+  { intro f, exact completion_hom X ≫ f, },
+  { intro f, exact extension_hom f, },
+  { intro f, apply subtype.ext.2, sorry },
+  { intro f, apply subtype.ext.2, tidy, erw completion.extension_coe, assumption },
+  { dsimp, intros X X' Y f g, apply subtype.ext.2, dsimp, erw ←completion.extension_map,refl, exact g.property, exact f.property, },
+  { tidy, },
+end
+
+end UniformSpace
