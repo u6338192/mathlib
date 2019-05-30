@@ -24,6 +24,9 @@ def succ_pnat (n : ℕ) : ℕ+ := ⟨succ n, succ_pos n⟩
 
 @[simp] theorem succ_pnat_coe (n : ℕ) : (succ_pnat n : ℕ) = succ n := rfl
 
+lemma succ_pnat_injective : function.injective succ_pnat :=
+by { intros n m h, simpa using congr_arg (coe : ℕ+ → ℕ) h }
+
 /-- Convert a natural number to a pnat. `n+1` is mapped to itself,
   and `0` becomes `1`. -/
 def to_pnat' (n : ℕ) : ℕ+ := succ_pnat (pred n)

@@ -97,7 +97,7 @@ instance : has_mul cardinal.{u} :=
 ⟨λq₁ q₂, quotient.lift_on₂ q₁ q₂ (λα β, mk (α × β)) $ assume α β γ δ ⟨e₁⟩ ⟨e₂⟩,
   quotient.sound ⟨equiv.prod_congr e₁ e₂⟩⟩
 
-@[simp] theorem mul_def (α β) : mk α * mk β = mk (α × β) := rfl
+@[simp] theorem mul_def (α β : Type u) : mk α * mk β = mk (α × β) := rfl
 
 private theorem add_comm (a b : cardinal.{u}) : a + b = b + a :=
 quotient.induction_on₂ a b $ assume α β, quotient.sound ⟨equiv.sum_comm α β⟩
@@ -500,6 +500,8 @@ le_antisymm
 
 /-- `ω` is the smallest infinite cardinal, also known as ℵ₀. -/
 def omega : cardinal.{u} := lift (mk ℕ)
+
+lemma mk_nat : mk nat = omega := (lift_id _).symm
 
 theorem omega_ne_zero : omega ≠ 0 :=
 ne_zero_iff_nonempty.2 ⟨⟨0⟩⟩
