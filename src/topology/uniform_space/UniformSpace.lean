@@ -5,7 +5,8 @@ Authors: Reid Barton, Patrick Massot, Scott Morrison
 Introduce UniformSpace -- the category of uniform spaces.
 -/
 import category_theory.concrete_category
-import topology.uniform_space.basic
+import category_theory.full_subcategory
+import topology.uniform_space.complete_separated
 import topology.Top.basic
 
 universes u v
@@ -37,3 +38,38 @@ def forget_to_Top : UniformSpace.{u} ⥤ Top.{u} :=
 def forget_to_Type_via_Top : forget_to_Top ⋙ Top.forget ≅ forget := iso.refl _
 
 end UniformSpace
+
+structure CpltSepUniformSpace :=
+(α : Type u)
+[is_uniform_space : uniform_space α]
+[is_complete_space : complete_space α]
+[is_separated : separated α]
+
+namespace CpltSepUniformSpace
+
+instance : has_coe_to_sort CpltSepUniformSpace :=
+{ S := Type u, coe := CpltSepUniformSpace.α }
+
+attribute [instance] is_uniform_space is_complete_space is_separated
+
+def to_UniformSpace (X : CpltSepUniformSpace) : UniformSpace :=
+⟨X.α⟩
+
+instance CpltSepUniformSpace_category : category CpltSepUniformSpace :=
+induced_category.category to_UniformSpace
+
+def of (X : Type u) [uniform_space X] [complete_space X] [separated X] : CpltSepUniformSpace := ⟨X⟩
+
+def forget_to_UniformSpace : CpltSepUniformSpace ⥤ UniformSpace := induced_functor to_UniformSpace
+
+def forget : CpltSepUniformSpace ⥤ Type u :=
+{ obj := λ R, R,
+  map := λ R S f, f.1 }
+
+instance forget_faithful : faithful forget := {}
+
+def forget_to_Type_via_UniformSpace : forget_to_UniformSpace ⋙ UniformSpace.forget ≅ forget := iso.refl _
+
+
+
+end CpltSepUniformSpace
