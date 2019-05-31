@@ -71,6 +71,8 @@ def forget : CpltSepUniformSpace ⥤ Type u :=
   map := λ R S f, f.1 }
 
 instance forget_faithful : faithful forget := {}
+instance forget_to_UniformSpace_fully_faithful : fully_faithful forget_to_UniformSpace :=
+induced_category.fully_faithful _
 
 def forget_to_Type_via_UniformSpace : forget_to_UniformSpace ⋙ UniformSpace.forget ≅ forget := iso.refl _
 
@@ -91,28 +93,37 @@ def completion_hom (X : UniformSpace) : X ⟶ forget_to_UniformSpace.obj (comple
 { val := (coe : X → completion X),
   property := completion.uniform_continuous_coe X }
 
-@[simp] lemma completion_hom_val (X : UniformSpace) :
-  (completion_hom X).val = (coe : X → completion X) := rfl
+@[simp] lemma completion_hom_val (X : UniformSpace) (x) :
+  (completion_hom X) x = (x : completion X) := rfl
 
 noncomputable def extension_hom {X : UniformSpace} {Y : CpltSepUniformSpace} (f : X ⟶ forget_to_UniformSpace.obj Y) :
   completion_functor.obj X ⟶ Y :=
 { val := completion.extension f,
   property := completion.uniform_continuous_extension }
 
-@[simp] lemma extension_hom_val {X : UniformSpace} {Y : CpltSepUniformSpace} (f : X ⟶ forget_to_UniformSpace.obj Y) :
-  (extension_hom f).val = completion.extension f := rfl.
+@[simp] lemma extension_hom_val {X : UniformSpace} {Y : CpltSepUniformSpace}
+  (f : X ⟶ forget_to_UniformSpace.obj Y) (x) :
+  (extension_hom f) x = completion.extension f x := rfl.
+
+-- @[extensionality] lemma foo {X : UniformSpace} {Y : CpltSepUniformSpace} (f g : completion_functor.obj X ⟶ Y)
+--   (h : completion_hom X ≫ (forget_to_UniformSpace.map f) = completion_hom X ≫ (forget_to_UniformSpace.map g)) : f = g :=
+-- begin
+--   sorry
+-- end
 
 -- TODO once someone does reflexive subcategories, perhaps update this:
 noncomputable def adj : completion_functor ⊣ forget_to_UniformSpace :=
 adjunction.mk_of_hom_equiv
+-- begin end
+-- { hom_equiv := begin end }
 begin
   fsplit, intros, fsplit,
   { intro f, exact completion_hom X ≫ f, },
   { intro f, exact extension_hom f, },
-  { intro f, apply subtype.ext.2, sorry },
-  { intro f, apply subtype.ext.2, tidy, erw completion.extension_coe, assumption },
-  { dsimp, intros X X' Y f g, apply subtype.ext.2, dsimp, erw ←completion.extension_map,refl, exact g.property, exact f.property, },
-  { tidy, },
+  { intro f, ext1, sorry },
+  { intro f, ext1, cases f, dsimp, erw completion.extension_coe, assumption },
+  { dsimp, intros X X' Y f g, ext1, dsimp, erw ←completion.extension_map,refl, exact g.property, exact f.property, },
+  { intros X Y Y' f g, refl },
 end
 
 end UniformSpace
