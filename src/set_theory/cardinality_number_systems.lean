@@ -6,7 +6,7 @@ Authors: Floris van Doorn
 The cardinality of various number systems, like pnat, int, rat and real.
 -/
 
-import data.real.basic set_theory.ordinal analysis.specific_limits
+import data.real.basic set_theory.ordinal analysis.specific_limits data.rat.denumerable
 
 open nat set
 noncomputable theory
@@ -31,14 +31,7 @@ begin
 end
 
 lemma mk_rat : mk ℚ = omega :=
-begin
-  apply le_antisymm,
-  { have : ∀(k : ℚ), ∃(n : ℤ × ℕ+), rat.mk_pnat n.1 n.2 = k,
-    { rintro ⟨n, m, hm, hnm⟩, use ⟨n, ⟨m, hm⟩⟩, dsimp [coprime] at hnm, simp [rat.mk_pnat, hnm] },
-    have := mk_le_of_surjective this,
-    rwa [←cardinal.mul_def, mk_int, mk_pnat, mul_eq_self (le_refl _)] at this },
-  { rw [←mk_nat], fapply mk_le_of_injective nat.cast_injective; apply_instance }
-end
+denumerable_iff.mp ⟨by apply_instance⟩
 
 variables {c : ℝ} {f g : ℕ → bool} {n : ℕ}
 
@@ -68,7 +61,7 @@ begin
   intro n, cases h : f n; simp [h]
 end
 
-def cantor_function (c : ℝ) (f : ℕ → bool) : ℝ := tsum $ cantor_function_aux c f
+def cantor_function (c : ℝ) (f : ℕ → bool) : ℝ := ∑ n, cantor_function_aux c f n
 
 lemma cantor_function_le (h1 : 0 ≤ c) (h2 : c < 1) (h3 : ∀ n, f n → g n) :
   cantor_function c f ≤ cantor_function c g :=

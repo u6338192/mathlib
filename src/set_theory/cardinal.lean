@@ -647,7 +647,7 @@ begin
   rintro ⟨f'⟩, cases embedding.trans f' equiv.ulift.to_embedding with f hf, exact ⟨f, hf⟩
 end
 
-lemma denumerable_iff (α : Type u) : nonempty (denumerable α) ↔ mk α = omega :=
+lemma denumerable_iff {α : Type u} : nonempty (denumerable α) ↔ mk α = omega :=
 ⟨λ⟨h⟩, quotient.sound $ by exactI ⟨ (denumerable.eqv α).trans equiv.ulift.symm ⟩,
  λ h, by { cases quotient.exact h with f, exact ⟨denumerable.mk' $ f.trans equiv.ulift⟩ }⟩
 
