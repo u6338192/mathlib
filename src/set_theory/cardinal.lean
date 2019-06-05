@@ -651,6 +651,12 @@ lemma denumerable_iff {α : Type u} : nonempty (denumerable α) ↔ mk α = omeg
 ⟨λ⟨h⟩, quotient.sound $ by exactI ⟨ (denumerable.eqv α).trans equiv.ulift.symm ⟩,
  λ h, by { cases quotient.exact h with f, exact ⟨denumerable.mk' $ f.trans equiv.ulift⟩ }⟩
 
+lemma mk_int : mk ℤ = omega :=
+denumerable_iff.mp ⟨by apply_instance⟩
+
+lemma mk_pnat : mk ℕ+ = omega :=
+denumerable_iff.mp ⟨by apply_instance⟩
+
 lemma two_le_iff : (2 : cardinal) ≤ mk α ↔ ∃x y : α, x ≠ y :=
 begin
   split,

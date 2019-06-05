@@ -12,27 +12,6 @@ open nat set
 noncomputable theory
 namespace cardinal
 
-lemma mk_pnat : mk ℕ+ = omega :=
-begin
-  rw [←mk_nat],
-  apply le_antisymm,
-  { apply mk_subtype_le },
-  { fapply mk_le_of_injective succ_pnat_injective }
-end
-
-lemma mk_int : mk ℤ = omega :=
-begin
-  rw [←mk_nat],
-  apply le_antisymm,
-  { have : ∀(k : ℤ), ∃(n : ℕ × ℕ), (n.1 : ℤ) - n.2 = k,
-    { rintro (k|k), use ⟨k, 0⟩, refl, use ⟨0, k.succ⟩, refl },
-    rw [←mul_eq_self (ge_of_eq mk_nat)], apply mk_le_of_surjective this },
-  { fapply mk_le_of_injective nat.cast_injective; apply_instance }
-end
-
-lemma mk_rat : mk ℚ = omega :=
-denumerable_iff.mp ⟨by apply_instance⟩
-
 variables {c : ℝ} {f g : ℕ → bool} {n : ℕ}
 
 def cantor_function_aux (c : ℝ) (f : ℕ → bool) (n : ℕ) : ℝ := cond (f n) (c ^ n) 0
