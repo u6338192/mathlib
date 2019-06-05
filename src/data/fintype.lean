@@ -686,6 +686,9 @@ end fintype
 class infinite (α : Type*) : Prop :=
 (not_fintype : fintype α → false)
 
+lemma not_nonempty_fintype {α : Type*} : ¬nonempty (fintype α) ↔ infinite α :=
+⟨λf, ⟨λ x, f ⟨x⟩⟩, λ⟨f⟩ ⟨x⟩, f x⟩
+
 namespace infinite
 
 instance nonempty (α : Type*) [infinite α] : nonempty α :=
