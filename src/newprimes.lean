@@ -29,7 +29,6 @@ have s₄ : prime p → (n ∣ p → n = 1 ∨ n = p), from λ (pp : prime p), (
 have s₂ : (n ∣ p → n = 1 ∨ n = p) → divisors p = [1,p], from
 begin
   intro,
-  apply h_div_in_list,
   sorry
 end,
 have s₃ : (p ≥ 2) ∧ (divisors p = [1,p]) → myprime p, from
