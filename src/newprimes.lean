@@ -1,4 +1,5 @@
 import data.nat.prime
+import tactic
 
 open nat
 
