@@ -4,7 +4,7 @@ import tactic
 open nat
 
 def divisors_aux (n : ℕ) : ℕ → list ℕ
-| 0     := []
+| 0     := [1]
 | 1     := [1]
 | (h+1) := if n % h = 0
            then [h] ++ divisors_aux h
@@ -21,8 +21,18 @@ def is_in_list (n : ℕ) : list ℕ → bool
 
 def myprime (p : ℕ) : Prop := (p ≥ 2) ∧ divisors p = [1,p]
 
-lemma h_div_in_list (h n : ℕ) (t : list ℕ) : h ∣ n → is_in_list h (divisors n) :=
-sorry
+lemma h_div_in_list (p a : ℕ) (h : a <= p) (j : 1 <= a) : prime p → divisors_aux p a = [1] :=
+begin
+  induction a,
+  {
+    intro,
+    refl,
+  },
+  {
+    intro,
+    tidy,
+  },
+end
 
 lemma my_prime_good (p n : ℕ) : prime p → myprime p :=
 have s₁ : prime p → (p ≥ 2), from prime.two_le,
