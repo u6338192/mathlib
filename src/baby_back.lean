@@ -8,12 +8,29 @@ local postfix `?`:9001 := optional
 
 namespace tactic
 
+-- meta def baby_back_aux (discharger : tactic unit) (asms : tactic (list expr)) (g : expr) : ℕ → tactic unit
+-- | 0 := skip--trace (tactic_statement g) --done
+-- | (n+1) := --done <|>
+--               (apply_assumption asms $ trace (tactic_statement g) >> baby_back_aux n) <|>
+--               (discharger >> baby_back_aux n)
+--               --(trace (tactic_statement g))
+
+-- meta def baby_back (opt : by_elim_opt := { }) : tactic unit :=
+-- do
+--   tactic.fail_if_no_goals,
+--   (if opt.all_goals then id else focus1) $ do
+--     [g] ← get_goals,
+--     baby_back_aux opt.discharger opt.assumptions g opt.max_rep
+--     --trace (tactic_statement g)
+
 meta def baby_back_aux (discharger : tactic unit) (asms : tactic (list expr)) (g : expr) : ℕ → tactic unit
-| 0 := skip--trace (tactic_statement g) --done
-| (n+1) := --done <|>
-              (apply_assumption asms $ trace (tactic_statement g) >> baby_back_aux n) <|>
-              (discharger >> baby_back_aux n)
-              --(trace (tactic_statement g))
+| 0 := trace (tactic_statement g)
+| (n+1) := (done >> trace (tactic_statement g)) <|>
+           lock_tactic_state
+             (do L ← asms,
+                 L.mmap (λ e, apply e >> baby_back_aux n <|> trace (tactic_statement g)),
+                 skip)
+
 
 meta def baby_back (opt : by_elim_opt := { }) : tactic unit :=
 do
@@ -21,7 +38,6 @@ do
   (if opt.all_goals then id else focus1) $ do
     [g] ← get_goals,
     baby_back_aux opt.discharger opt.assumptions g opt.max_rep
-    --trace (tactic_statement g)
 
 namespace interactive
 
@@ -54,8 +70,9 @@ begin
   baby_back,
 end
 
---* `suggest` doesn't suggest `eq_zero_of_le_div` for some reason, even though it works
 --* `solve_by_elim` is doing more than what is being printed out.
+--* cntrl clicking on .force in suggest takes you to `not`vfor some reason.
+--* should solve by elim use absurd?
 example {a : ℕ} (h : a ≤ a / 2) : a = 0 :=
 begin
   --suggest,
@@ -67,3 +84,5 @@ begin
   --baby_back,
   exact h
 end
+
+example (a : Prop) (h₁ : a) (h₂ : ¬a) : false := by library_search
