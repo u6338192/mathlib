@@ -23,21 +23,47 @@ namespace tactic
 --     baby_back_aux opt.discharger opt.assumptions g opt.max_rep
 --     --trace (tactic_statement g)
 
-meta def baby_back_aux (discharger : tactic unit) (asms : tactic (list expr)) (g : expr) : ℕ → tactic unit
+meta def baby_back_aux' (discharger : tactic unit) (asms : tactic (list expr)) (g : expr) : ℕ → tactic unit
 | 0 := trace (tactic_statement g)
 | (n+1) := (done >> trace (tactic_statement g)) <|>
            lock_tactic_state
              (do L ← asms,
-                 L.mmap (λ e, apply e >> baby_back_aux n <|> trace (tactic_statement g)),
+                 L.mmap (λ e, apply e >> baby_back_aux' n <|> trace (tactic_statement g)),
                  skip)
 
+def flatten_list {α : Type} : list (list α) → list α
+| []     := []
+| (h::t) := h ++ flatten_list t
+
+meta def baby_back_aux (discharger : tactic unit) (asms : tactic (list expr)) (g : expr) :
+  ℕ → tactic (list string)
+| 0 := do string ← tactic_statement g,
+          return [string]
+| (n+1) := (do done,
+               string ← tactic_statement g,
+               return [string])
+           <|>
+           (do L ← asms,
+               S ← L.mmap (λ e,
+                          (do state ← read,
+                              apply e,
+                              more ← baby_back_aux n,
+                              write state,
+                              return more))
+                          <|>
+                          (do string ← tactic_statement g,
+                              return [[string]]),
+               return (flatten_list S))
 
 meta def baby_back (opt : by_elim_opt := { }) : tactic unit :=
 do
   tactic.fail_if_no_goals,
   (if opt.all_goals then id else focus1) $ do
     [g] ← get_goals,
-    baby_back_aux opt.discharger opt.assumptions g opt.max_rep
+    L ← baby_back_aux opt.discharger opt.assumptions g opt.max_rep,
+    --LL ← list.filter --filter repeats
+    L.mmap (λ s, trace s),
+    skip
 
 namespace interactive
 
@@ -71,7 +97,7 @@ begin
 end
 
 --* `solve_by_elim` is doing more than what is being printed out.
---* cntrl clicking on .force in suggest takes you to `not`vfor some reason.
+--* cntrl clicking on .force in suggest takes you to `not` for some reason.
 --* should solve by elim use absurd?
 example {a : ℕ} (h : a ≤ a / 2) : a = 0 :=
 begin

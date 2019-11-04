@@ -1,5 +1,6 @@
 import data.nat.prime
 import tactic
+import tactic.find
 
 open nat
 
@@ -45,7 +46,7 @@ begin
   refl,
 end
 
-lemma ffa (p q : ℕ) (h₁ : q = p) (h₂ : q < p): false :=
+lemma not_q_eq_p_and_q_lt_p (p q : ℕ) (h₁ : q = p) (h₂ : q < p): false :=
 begin
   rw h₁ at h₂,
   revert h₂,
@@ -54,9 +55,9 @@ begin
   exact irrefl p,
 end
 
-lemma ffs (p q : ℕ) (h₁ : q = p) : ¬(q < p) := λ a, ffa p q h₁ a
+lemma q_eq_p_to_not_q_lt_p (p q : ℕ) (h₁ : q = p) : ¬(q < p) := λ a, not_q_eq_p_and_q_lt_p p q h₁ a
 
-lemma ffss (p q : ℕ) (h₁ : q < p) : ¬(q = p) := λ a, ffa p q a h₁
+lemma q_lt_p_to_not_q_eq_p (p q : ℕ) (h₁ : q < p) : ¬(q = p) := λ a, not_q_eq_p_and_q_lt_p p q a h₁
 
 lemma prime_mod (p b : ℕ) (h₁ : prime p) (h₂ : 2 ≤ b) (h₃ : b < p) : p % b ≠ 0 :=
 begin
@@ -69,8 +70,8 @@ begin
   have o₆ : ¬(b = 1 ∨ b = p) → ¬(b ∣ p), from mt (o₄ b),
   have o₇ : ¬(b = 1) ∧ ¬(b = p) → ¬(b = 1 ∨ b = p), from not_or_distrib.mpr,
   have o₈ : ¬(b = 1) ∧ ¬(b = p) → ¬(b ∣ p), from λ a, o₆ (o₇ a),
-  have o₉ : ¬(b = 1), from λ a, ffa b 1 a.symm h₂,
-  have s₁ : ¬(b = p), from ffss p b h₃,
+  have o₉ : ¬(b = 1), from λ a, not_q_eq_p_and_q_lt_p b 1 a.symm h₂,
+  have s₁ : ¬(b = p), from q_lt_p_to_not_q_eq_p p b h₃,
   exact o₈ ⟨o₉,s₁⟩,
 end
 
@@ -133,23 +134,68 @@ begin
   exact if_pos o₁,
 end
 
-lemma good_prime_my (p : ℕ) : myprime p → prime p :=
+lemma div_aux_p_p (p : ℕ) (h₁ : myprime p) : divisors_aux p p = [1] :=
+begin
+  sorry
+end
+
+lemma divisors_mod (n k : ℕ) (h₁ : k ∈ divisors n) : n % k = 0 :=
+begin
+  induction n,
+  {
+    exact zero_mod k
+  },
+  {
+    sorry,
+  }
+end
+
+lemma prime_list_mem (p k : ℕ) (h₁ : divisors p = [p, 1]) (h₂ : k ∈ divisors p) : k = p ∨ k = 1 :=
+begin
+  rw h₁ at h₂,
+  cases h₂,
+  {
+    exact or.inl h₂
+  },
+  {
+    cases h₂,
+    exact or.inr h₂,
+    {
+      have o₁ : false, from h₂,
+      exact false.rec (k = p ∨ k = 1) o₁,
+    },
+  },
+end
+
+lemma list_rfl (a b : ℕ) : [a] ++ [b] = [a,b] := rfl
+
+lemma good_prime_my (p k : ℕ) : myprime p → prime p :=
 λ b,
 begin
+  have h₁ : k ∈ divisors p, from sorry,
   have s₁ : (p ≥ 2), from b.left,
-  have s₂ : divisors p = [p,1] → (∀ n : ℕ, n ∣ p → n = 1 ∨ n = p), from
+  have o₀ : divisors p = [p,1], from b.right,
+  have j₀ : k ∈ divisors p → p % k = 0, from
   begin
-    unfold divisors,
-    rw def_aux,
-    rw p_mod_p_ite,
-    intros,
-    sorry, --Think about how to do this proof (break into peices)
+    sorry, --prove this by induction I think
   end,
-  have s₃ : divisors p = [p,1], from b.right,
-  have s₄ : (∀ n : ℕ, n ∣ p → n = 1 ∨ n = p), from s₂ s₃,
+  have o₁ : k ∈ divisors p → k ∣ p, from
+  begin
+    sorry
+  end,
+  have o₂ : k ∈ divisors p → divisors p = [p,1] → (k ∣ p → k = 1 ∨ k = p), from
+  begin
+    intros,
+    refine or.comm.mp _,
+    refine prime_list_mem p k o₀ a,
+  end,
+  have s₂ : k ∣ p → k = 1 ∨ k = p, from λ a, o₂ h₁ o₀ a,
   show prime p, from
   begin
     unfold prime,
-    exact ⟨s₁, s₂ s₃⟩,
+    split,
+    exact s₁,
+    sorry
+
   end,
 end
