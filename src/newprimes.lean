@@ -1,6 +1,7 @@
 import data.nat.prime
 import tactic
 import tactic.find
+import Lucastacs
 
 open nat
 
@@ -134,21 +135,8 @@ begin
   exact if_pos o₁,
 end
 
-lemma div_aux_p_p (p : ℕ) (h₁ : myprime p) : divisors_aux p p = [1] :=
-begin
-  sorry
-end
-
-lemma divisors_mod (n k : ℕ) (h₁ : k ∈ divisors n) : n % k = 0 :=
-begin
-  induction n,
-  {
-    exact zero_mod k
-  },
-  {
-    sorry,
-  }
-end
+lemma p_mod_a_ite (p a : ℕ) (h₁ : p % a = 0) : ite (p % a = 0) ([a] ++ divisors_aux p a) (divisors_aux p a)
+  = [a] ++ divisors_aux p a := if_pos h₁
 
 lemma prime_list_mem (p k : ℕ) (h₁ : divisors p = [p, 1]) (h₂ : k ∈ divisors p) : k = p ∨ k = 1 :=
 begin
@@ -167,35 +155,70 @@ begin
   },
 end
 
-lemma list_rfl (a b : ℕ) : [a] ++ [b] = [a,b] := rfl
+lemma a_in_div_aux (p a : ℕ) (h₁ : p % a = 0) : a ∈ divisors_aux p (a+1) :=
+begin
+  unfold divisors_aux,
+  rw [p_mod_a_ite p a h₁],
+  exact set.mem_insert a (λ (a : ℕ), list.mem a (list.append list.nil (divisors_aux p a))),
+end
 
-lemma good_prime_my (p k : ℕ) : myprime p → prime p :=
+lemma div_aux_subset (p a b k : ℕ) (h₁ : a ≤ b) (h₂ : k ∈ divisors_aux p a) :
+  k ∈ divisors_aux p b :=
+begin
+  induction h₁,
+  {
+    exact h₂,
+  },
+  {
+    unfold divisors_aux,
+    split_ifs,
+    {
+      exact set.mem_union_right (eq k) h₁_ih
+    },
+    {
+      exact h₁_ih,
+    }
+  },
+end
+
+lemma k_mod_p_k_div_p (p k : ℕ) (h₁ : p % k = 0) (h₂ : 0 < p) : k ∈ divisors p :=
+begin
+  have o₁ : k ∈ divisors_aux p (k+1), from a_in_div_aux p k h₁,
+  unfold divisors,
+  have o₃ : k ∣ p, from dvd_of_mod_eq_zero h₁,
+  have o₄ : k ≤ p, from le_of_dvd h₂ o₃,
+  have o₂ : k < p + 1, from lt_succ_iff.mpr o₄,
+  exact div_aux_subset p (succ k) (p + 1) k o₂ o₁,
+end
+
+lemma good_prime_my (p : ℕ) : myprime p → prime p :=
 λ b,
 begin
-  have h₁ : k ∈ divisors p, from sorry,
   have s₁ : (p ≥ 2), from b.left,
   have o₀ : divisors p = [p,1], from b.right,
-  have j₀ : k ∈ divisors p → p % k = 0, from
-  begin
-    sorry, --prove this by induction I think
-  end,
-  have o₁ : k ∈ divisors p → k ∣ p, from
-  begin
-    sorry
-  end,
-  have o₂ : k ∈ divisors p → divisors p = [p,1] → (k ∣ p → k = 1 ∨ k = p), from
+  have s₂ : divisors p = [p,1] → (∀ k : ℕ, p % k = 0 → k = 1 ∨ k = p), from
   begin
     intros,
-    refine or.comm.mp _,
-    refine prime_list_mem p k o₀ a,
+    rw or.comm,
+    refine prime_list_mem p k o₀ _,
+    have j₁ : 0 < p, from lt_of_succ_lt s₁,
+    exact k_mod_p_k_div_p p k a_1 j₁
   end,
-  have s₂ : k ∣ p → k = 1 ∨ k = p, from λ a, o₂ h₁ o₀ a,
+  have s₃ : ∀ k : ℕ, k ∣ p → p % k = 0, from λ a, mod_eq_zero_of_dvd,
+  have s₄ : ∀ k : ℕ, k ∣ p → k = 1 ∨ k = p, from
+  begin
+    intros,
+    exact s₂ o₀ k (s₃ k a),
+  end,
   show prime p, from
   begin
     unfold prime,
     split,
-    exact s₁,
-    sorry
-
-  end,
+    {
+      exact s₁,
+    },
+    {
+      exact s₄,
+    }
+  end
 end
