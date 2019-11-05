@@ -43,16 +43,17 @@ meta def baby_back_aux (discharger : tactic unit) (asms : tactic (list expr)) (g
                string ← tactic_statement g,
                return [string])
            <|>
-           (do L ← asms,
+           (do state ← read,
+               L ← asms,
                S ← L.mmap (λ e,
-                          (do state ← read,
-                              apply e,
+                          (do apply e,
                               more ← baby_back_aux n,
-                              write state,
-                              return more))
+                              return more
+                              )
                           <|>
                           (do string ← tactic_statement g,
-                              return [[string]]),
+                              return [string])),
+               write state,
                return (flatten_list S))
 
 meta def baby_back (opt : by_elim_opt := { }) : tactic unit :=

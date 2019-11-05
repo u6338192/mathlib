@@ -135,7 +135,8 @@ begin
   exact if_pos o₁,
 end
 
-lemma p_mod_a_ite (p a : ℕ) (h₁ : p % a = 0) : ite (p % a = 0) ([a] ++ divisors_aux p a) (divisors_aux p a)
+lemma p_mod_a_ite (p a : ℕ) (h₁ : p % a = 0) :
+  ite (p % a = 0) ([a] ++ divisors_aux p a) (divisors_aux p a)
   = [a] ++ divisors_aux p a := if_pos h₁
 
 lemma prime_list_mem (p k : ℕ) (h₁ : divisors p = [p, 1]) (h₂ : k ∈ divisors p) : k = p ∨ k = 1 :=
@@ -165,6 +166,9 @@ end
 lemma div_aux_subset (p a b k : ℕ) (h₁ : a ≤ b) (h₂ : k ∈ divisors_aux p a) :
   k ∈ divisors_aux p b :=
 begin
+  --auto_cases, bug in auto_cases?
+  check, --did not find induction here
+         --auto_cases does not find this induction hyptoheis probably because h₁ : a ≤ b.
   induction h₁,
   {
     exact h₂,
