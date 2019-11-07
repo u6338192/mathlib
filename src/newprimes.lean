@@ -1,7 +1,7 @@
 import data.nat.prime
 import tactic
 import tactic.find
-import Lucastacs
+import hotkeys
 
 open nat
 

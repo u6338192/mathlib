@@ -1,8 +1,10 @@
 import tactic
 import tactic.tidy
+import init.meta.lean.parser
 
 open tactic
 open tactic.tidy
+open parser
 
 meta def lib : tactic unit :=
 tactic.interactive.library_search
@@ -39,9 +41,12 @@ meta def tactics_list : list (tactic string) :=
   split                                       >> pure "split",
   `[split_ifs]                                >> pure "split_ifs",
   swap                                        >> pure "swap",
+  `[ring]                                     >> pure "ring",
+  `[push_neg]                                 >> pure "push_neg",
+  --End additions
   tidy.run_tactics ]
 
-meta def check : tactic unit :=
+meta def check (discharger : tactic unit := skip) : tactic unit :=
 do let L := tactics_list,
-   L.mmap (λ t, (do state ← read, str ← t, trace str, write state) <|> do skip),
+   L.mmap (λ t, (do state ← read, str ← t, trace str, discharger, write state) <|> do skip),
    skip
