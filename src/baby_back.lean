@@ -1,36 +1,104 @@
 import tactic.suggest
 import tactic.solve_by_elim
 import data.nat.basic
+import hotkeys
 
 open interactive lean.parser interactive.types
 open tactic tactic.suggest
 local postfix `?`:9001 := optional
 
+#eval list.remove_all [1,2,3,4,5,6] [2,4,6]
+#eval [1,2,3,4,5,6].filter(∉ [1,3,5])
+#eval [1,2,3,4,5,6].filter(≠ 3)
+
+lemma list_length_add_one {α : Type} (t : list α) (h : α) : (h::t).length = t.length + 1 := rfl
+
+lemma list_sizeof_add_one {α : Type} (t : list α) (h : α) : (h::t).sizeof ≤ t.sizeof + 1 :=
+begin
+  induction t,
+  {
+    refl,
+  },
+  {
+    dsimp [list.sizeof] at *,
+    simp,
+    refl,
+  },
+end
+
+lemma filter_length_leq {α : Type} (L : list α) (p : α → Prop) [decidable_pred p]
+  : (L.filter(p)).length ≤ L.length :=
+begin
+  induction L,
+  { refl, },
+  {
+    unfold list.filter,
+    split_ifs,
+    {
+      rw list_length_add_one,
+      rw list_length_add_one,
+      rw add_le_add_iff_right,
+      exact L_ih,
+    },
+    {
+      rw list_length_add_one,
+      exact le_add_right L_ih,
+    }
+  }
+end
+
+lemma filter_sizeof_leq {α : Type} (L : list α) (p : α → Prop) [decidable_pred p]
+  : (L.filter(p)).sizeof ≤ L.sizeof :=
+begin
+  induction L,
+  { refl, },
+  {
+    unfold list.filter,
+    split_ifs,
+    {
+      rw list_length_add_one,
+      rw list_length_add_one,
+      rw add_le_add_iff_right,
+      exact L_ih,
+    },
+    {
+      rw list_length_add_one,
+      exact le_add_right L_ih,
+    }
+  }
+end
+
+def remove_reps_aux : list string → list string
+| []     := []
+| (h::t) := have list.sizeof (list.filter (λ (_x : string), ¬_x = h) t)
+              < string.length h + (1 + list.sizeof t), from
+            begin
+              induction t,
+              {
+                exact nat.lt_of_sub_eq_succ rfl,
+              },
+              {
+                have o₁ : list.sizeof (list.filter (λ (_x : string), ¬_x = h) (t_hd :: t_tl))
+                  ≤ list.sizeof (t_hd :: t_tl), from
+                begin
+                  --apply filter_sizeof_leq (t_hd :: t_tl) (λ (_x : string), ¬_x = h),
+                  sorry,
+                end,
+                rw ←add_assoc,
+                apply lt_add_of_pos_of_le,
+                {
+                  exact nat.succ_pos (string.length h),
+                },
+                {
+                  exact o₁,
+                },
+              },
+            end,
+            (h::remove_reps_aux (t.filter(≠ h)) : list string)
+
 namespace tactic
 
--- meta def baby_back_aux (discharger : tactic unit) (asms : tactic (list expr)) (g : expr) : ℕ → tactic unit
--- | 0 := skip--trace (tactic_statement g) --done
--- | (n+1) := --done <|>
---               (apply_assumption asms $ trace (tactic_statement g) >> baby_back_aux n) <|>
---               (discharger >> baby_back_aux n)
---               --(trace (tactic_statement g))
-
--- meta def baby_back (opt : by_elim_opt := { }) : tactic unit :=
--- do
---   tactic.fail_if_no_goals,
---   (if opt.all_goals then id else focus1) $ do
---     [g] ← get_goals,
---     baby_back_aux opt.discharger opt.assumptions g opt.max_rep
---     --trace (tactic_statement g)
-
-meta def baby_back_aux' (discharger : tactic unit) (asms : tactic (list expr)) (g : expr) : ℕ → tactic unit
-| 0 := trace (tactic_statement g)
-| (n+1) := (done >> trace (tactic_statement g)) <|>
-           lock_tactic_state
-             (do L ← asms,
-                 L.mmap (λ e, apply e >> baby_back_aux' n <|> trace (tactic_statement g)),
-                 skip)
-
+--find combinator that does this
 def flatten_list {α : Type} : list (list α) → list α
 | []     := []
 | (h::t) := h ++ flatten_list t
@@ -62,7 +130,7 @@ do
   (if opt.all_goals then id else focus1) $ do
     [g] ← get_goals,
     L ← baby_back_aux opt.discharger opt.assumptions g opt.max_rep,
-    --LL ← list.filter --filter repeats
+    --filter list
     L.mmap (λ s, trace s),
     skip
 

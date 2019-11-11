@@ -43,10 +43,26 @@ meta def tactics_list : list (tactic string) :=
   swap                                        >> pure "swap",
   `[ring]                                     >> pure "ring",
   `[push_neg]                                 >> pure "push_neg",
+  `[contrapose]                               >> pure "contrapose",
   --End additions
   tidy.run_tactics ]
 
 meta def check (discharger : tactic unit := skip) : tactic unit :=
-do let L := tactics_list,
-   L.mmap (λ t, (do state ← read, str ← t, trace str, discharger, write state) <|> do skip),
+do tactics_list.mmap (λ t, (do state ← read, str ← t, trace str, discharger, write state) <|> skip),
+   skip
+
+meta def check_list_aux : ℕ → list string → tactic(list (list string))
+| 0     [] := none
+| 0     L  := some [L]
+| (n+1) L  := lock_tactic_state (do
+                 tactics_list.mmap (λ t, (do str ← t,
+                                             CL ← check_list_aux n (L ++ [str]),
+                                             return (list.intercalate ["],["] CL))
+                                             <|>
+                                             (return [])))
+
+
+meta def check_list (n : ℕ := 3) : tactic unit :=
+do L ← check_list_aux n [],
+   L.mmap(λ l, trace l),
    skip
