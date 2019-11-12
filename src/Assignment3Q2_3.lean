@@ -42,6 +42,30 @@ begin
   { exact multiset.card_eq_one.mp h, },
 end
 
+lemma eval_singleton [comm_semigroup α] (a : α) (e : comm_semi_group_expr α)
+  (h : to_multiset α e = {a}) : eval α e = a :=
+begin
+  have o₁ : e = const a, from
+  begin
+    cases e,
+    {
+      have o₂ : to_multiset α (const e) = {e}, from rfl,
+       have o₃ : {a} = {e}, from
+      begin
+        rw ←o₂,
+        rw ←h,
+      end,
+      have o₄ : a = e, from multiset.singleton_inj.mp (eq.symm h),
+      rw o₄,
+    },
+    {
+      sorry,
+    },
+  end,
+  rw o₁,
+  refl,
+end
+
 lemma main_thm_aux [comm_semigroup α] (n : ℕ) (h₀ : 1 ≤ n) (e₁ e₂ : comm_semi_group_expr α) (x₁ x₂ : α)
   (h : to_multiset α e₁ = to_multiset α e₂) (w1 : eval α e₁ = x₁) (w2 : eval α e₂ = x₂)
   (h₁ : n = len α e₁)
@@ -62,7 +86,35 @@ begin
       rw ←o₁,
       exact eq.symm h₁,
     end,
-
+    cases s₁,
+    cases s₂,
+    have s₃ : {s₂_w} = {s₁_w}, from
+    begin
+      rw h at s₁_h,
+      rw s₁_h at s₂_h,
+      exact s₂_h.symm,
+    end,
+    have s₄ : s₁_w = x₁, from
+    begin
+      cases w1,
+      rw eval_singleton,
+      exact s₁_h,
+    end,
+    have s₅ : s₂_w = x₂, from
+    begin
+      cases w2,
+      rw eval_singleton,
+      exact s₂_h,
+    end,
+    rw s₄ at s₁_h,
+    rw s₅ at s₂_h,
+    have s₆ : {x₁} = {x₂}, from
+    begin
+      rw h at s₁_h,
+      rw s₁_h at s₂_h,
+      exact s₂_h,
+    end,
+    exact multiset.singleton_inj.mp s₆,
   },
   {
 
