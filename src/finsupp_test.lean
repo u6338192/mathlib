@@ -113,3 +113,24 @@ begin
     rw [w s s_mem],
   },
 end
+
+lemma eq_big_finsupp_prod_Z' [has_zero β] [comm_monoid γ] (f₁ f₂ : α →₀ β) (g : α → β → γ)
+  (h : f₁.support = f₂.support) (w : ∀a∈f₁.support, f₁ a = f₂ a) :
+finsupp.prod f₁ g = finsupp.prod f₂ g :=
+begin
+  have w' : ∀ (a : α), a ∈ f₂.support → f₁ a = f₂ a, from begin rw h at w, exact w, end,
+  conv
+  {
+    to_lhs,
+    applyc `prod_congr,
+    rw h, -- Need to figure out how to deal with this
+    skip,
+
+    intro `s,
+    intro `s_mem,
+    -- WTF!!!
+    rw [w' s s_mem],
+    --skip,
+  },
+  sorry,
+end

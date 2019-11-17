@@ -1,6 +1,7 @@
 import tactic
 import tactic.tidy
 import init.meta.lean.parser
+import baby_back_new
 
 open tactic
 open tactic.tidy
@@ -44,6 +45,9 @@ meta def tactics_list : list (tactic string) :=
   `[ring]                                     >> pure "ring",
   `[push_neg]                                 >> pure "push_neg",
   `[contrapose]                               >> pure "contrapose",
+  `[finish]                                   >> pure "finish",
+  `[tauto]                                    >> pure "tauto",
+  `[cc]                                       >> pure "cc",
   --End additions
   tidy.run_tactics ]
 
@@ -51,18 +55,57 @@ meta def check (discharger : tactic unit := skip) : tactic unit :=
 do tactics_list.mmap (λ t, (do state ← read, str ← t, trace str, discharger, write state) <|> skip),
    skip
 
-meta def check_list_aux : ℕ → list string → tactic(list (list string))
-| 0     [] := none
-| 0     L  := some [L]
-| (n+1) L  := lock_tactic_state (do
-                 tactics_list.mmap (λ t, (do str ← t,
-                                             CL ← check_list_aux n (L ++ [str]),
-                                             return (list.intercalate ["],["] CL))
-                                             <|>
-                                             (return [])))
+-- meta def check_list_aux : ℕ → list string → tactic(list (list string))
+-- | 0     [] := none
+-- | 0     L  := some [L]
+-- | (n+1) L  := lock_tactic_state (do
+--                  tactics_list.mmap (λ t, (do str ← t,
+--                                              CL ← check_list_aux n (L ++ [str]),
+--                                              return (list.intercalate ["],["] CL))
+--                                              <|>
+--                                              (return [])))
 
+-- meta def check_list (n : ℕ := 3) : tactic unit :=
+-- do L ← check_list_aux n [],
+--    L.mmap(λ l, trace l),
+--    skip
+
+--find combinator that does this
+def flatten_list {α : Type} : list (list α) → list α
+| []     := []
+| (h::t) := h ++ flatten_list t
+
+meta def check_list_aux : ℕ → list string → tactic (list string)
+| 0     [] := none
+| 0     L  := do return L
+| (n+1) L  := do (Q : list (list string)) ← tactics_list.mmap (λ t, lock_tactic_state
+                                        (do str ← t,
+                                            let L' := L ++ [str],
+                                            C ← check_list_aux n L',
+                                            return C)
+                                        <|> return [""]),
+                 return [""]
 
 meta def check_list (n : ℕ := 3) : tactic unit :=
-do L ← check_list_aux n [],
-   L.mmap(λ l, trace l),
+do L ← tactics_list.mmap (λ t, lock_tactic_state ((do str ← t, return str) <|> return "")),
+   L.mmap (λ str, trace str),
    skip
+
+
+open interactive lean.parser interactive.types
+open tactic tactic.suggest
+local postfix `?`:9001 := optional
+
+namespace tactic.interactive
+
+meta def bb (all_goals : parse $ (tk "*")?) (no_dflt : parse only_flag) (hs : parse simp_arg_list)  (attr_names : parse with_ident_list) (opt : by_elim_opt := { }) : tactic unit :=
+do asms ← mk_assumption_set no_dflt hs attr_names,
+   tactic.baby_back { all_goals := all_goals.is_some, discharger := skip, assumptions := return asms, ..opt }
+
+end tactic.interactive
+
+example (n m : ℕ) : n * m = m * n :=
+begin
+  --check_list,
+
+end

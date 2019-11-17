@@ -7,72 +7,7 @@ open interactive lean.parser interactive.types
 open tactic tactic.suggest
 local postfix `?`:9001 := optional
 
-#eval list.remove_all [1,2,3,4,5,6] [2,4,6]
-#eval [1,2,3,4,5,6].filter(∉ [1,3,5])
-#eval [1,2,3,4,5,6].filter(≠ 3)
-
-lemma list_length_add_one {α : Type} (t : list α) (h : α) : (h::t).length = t.length + 1 := rfl
-
-lemma list_sizeof_add_one {α : Type} (t : list α) (h : α) : (h::t).sizeof ≤ t.sizeof + 1 :=
-begin
-  induction t,
-  {
-    refl,
-  },
-  {
-    dsimp [list.sizeof] at *,
-    simp,
-    refl,
-  },
-end
-
-lemma filter_length_leq {α : Type} (L : list α) (p : α → Prop) [decidable_pred p]
-  : (L.filter(p)).length ≤ L.length :=
-begin
-  induction L,
-  { refl, },
-  {
-    unfold list.filter,
-    split_ifs,
-    {
-      rw list_length_add_one,
-      rw list_length_add_one,
-      rw add_le_add_iff_right,
-      exact L_ih,
-    },
-    {
-      rw list_length_add_one,
-      exact le_add_right L_ih,
-    }
-  }
-end
-
-lemma filter_sizeof_leq {α : Type} (L : list α) (p : α → Prop) [decidable_pred p]
-  : (L.filter(p)).sizeof ≤ L.sizeof :=
-begin
-  induction L,
-  { refl, },
-  {
-    unfold list.filter,
-    split_ifs,
-    {
-      rw list_length_add_one,
-      rw list_length_add_one,
-      rw add_le_add_iff_right,
-      exact L_ih,
-    },
-    {
-      rw list_length_add_one,
-      exact le_add_right L_ih,
-    }
-  }
-end
-
---set_option pp.implicit true
-
-example (a b c : ℕ) (h₁ : a ≤ b) (h₂ : b ≤ c) : a ≤ c := by exact le_trans h₁ h₂
-
-def remove_reps_aux : list string → list string
+def remove_reps : list string → list string
 | []     := []
 | (h::t) := have list.sizeof (list.filter (λ (_x : string), ¬_x = h) t)
               < string.length h + (1 + list.sizeof t), from
@@ -82,12 +17,6 @@ def remove_reps_aux : list string → list string
                 exact nat.lt_of_sub_eq_succ rfl,
               },
               {
-                -- have o₁ : list.sizeof (list.filter (λ (_x : string), ¬_x = h) (t_hd :: t_tl))
-                --   ≤ list.sizeof (t_hd :: t_tl), from
-                -- begin
-                --   apply filter_sizeof_leq (t_hd :: t_tl) (λ (_x : string), ¬_x = h),
-                --   sorry,
-                -- end,
                 have o₁ : list.sizeof (list.filter (λ (_x : string), ¬_x = h) (t_hd :: t_tl))
                   ≤ list.sizeof (t_hd :: t_tl), from
                 begin
@@ -120,7 +49,10 @@ def remove_reps_aux : list string → list string
                 },
               },
             end,
-            (h::remove_reps_aux (t.filter(≠ h)) : list string)
+            (h::remove_reps (t.filter(≠ h)) : list string)
+
+#eval remove_reps ["1","2","3","4","5","6"]
+#eval remove_reps ["3","1","2","3","4","2","6","3","2","6","5","6","2","6","3"]
 
 namespace tactic
 
@@ -156,13 +88,13 @@ do
   (if opt.all_goals then id else focus1) $ do
     [g] ← get_goals,
     L ← baby_back_aux opt.discharger opt.assumptions g opt.max_rep,
-    --filter list
+    let L := remove_reps L,
     L.mmap (λ s, trace s),
     skip
 
 namespace interactive
 
-meta def baby_back' (all_goals : parse $ (tk "*")?) (no_dflt : parse only_flag) (hs : parse simp_arg_list)  (attr_names : parse with_ident_list) (opt : by_elim_opt := { }) : tactic unit :=
+meta def baby_back (all_goals : parse $ (tk "*")?) (no_dflt : parse only_flag) (hs : parse simp_arg_list)  (attr_names : parse with_ident_list) (opt : by_elim_opt := { }) : tactic unit :=
 do asms ← mk_assumption_set no_dflt hs attr_names,
    tactic.baby_back { all_goals := all_goals.is_some, discharger := skip, assumptions := return asms, ..opt }
 
@@ -191,19 +123,8 @@ begin
   baby_back,
 end
 
---* `solve_by_elim` is doing more than what is being printed out.
---* cntrl clicking on .force in suggest takes you to `not` for some reason.
---* should solve by elim use absurd?
 example {a : ℕ} (h : a ≤ a / 2) : a = 0 :=
 begin
-  --suggest,
-  --baby_back [eq_zero_of_le_div],
-  refine eq_zero_of_le_div _ _,
-  --baby_back [le_refl],
-  exact 2,
-  exact le_refl 2,
-  --baby_back,
-  exact h
+  baby_back [eq_zero_of_le_div, le_refl],
+  exact eq_zero_of_le_div (le_refl 2) h,
 end
-
-example (a : Prop) (h₁ : a) (h₂ : ¬a) : false := by library_search

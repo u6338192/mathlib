@@ -81,8 +81,9 @@ begin
       rw length_split,
       rw length_split at e₂_ih_a_1,
       rw length_split at e₂_ih_a_1,
+      rw add_comm (len α e₂_a) (len α e₂_a_1),
       rw ←add_assoc,
-      sorry, --(easy) do it later.
+      exact le_add_right e₂_ih_a_1,
     },
   },
 end
@@ -155,6 +156,7 @@ begin
   exact multiset.singleton_inj.mp o₃,
 end
 
+--induction case needs to be rewritten.
 lemma induction [comm_semigroup α] (n : ℕ) (e₁ e₂ : comm_semi_group_expr α) (x₁ x₂ : α)
 (h : to_multiset α e₁ = to_multiset α e₂) (w1 : eval α e₁ = x₁) (w2 : eval α e₂ = x₂)
  (H : len α e₁ = n) : x₁ = x₂ :=
