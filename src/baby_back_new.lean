@@ -1,7 +1,6 @@
 import tactic.suggest
 import tactic.solve_by_elim
 import data.nat.basic
-import hotkeys
 
 open interactive lean.parser interactive.types
 open tactic tactic.suggest

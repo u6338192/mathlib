@@ -157,11 +157,18 @@ begin
 end
 
 --induction case needs to be rewritten.
-lemma induction [comm_semigroup α] (n : ℕ) (e₁ e₂ : comm_semi_group_expr α) (x₁ x₂ : α)
+lemma induction [comm_semigroup α] (n : ℕ) (l : 1 ≤ n) (e₁ e₂ : comm_semi_group_expr α) (x₁ x₂ : α)
 (h : to_multiset α e₁ = to_multiset α e₂) (w1 : eval α e₁ = x₁) (w2 : eval α e₂ = x₂)
  (H : len α e₁ = n) : x₁ = x₂ :=
 begin
-  sorry,
+  induction l,
+  {
+    exact base_case α e₁ e₂ x₁ x₂ h w1 w2 H,
+  },
+  {
+    --NOT GOING TO WORK,
+    sorry,
+  },
 end
 
 theorem main_thm [comm_semigroup α] (e₁ e₂ : comm_semi_group_expr α) (x₁ x₂ : α)

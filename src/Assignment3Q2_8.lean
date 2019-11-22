@@ -315,7 +315,29 @@ begin
   rw o₁,
 end
 
-
+lemma inj_set_eval [comm_semigroup α] (n : ℕ) (e₁ e₂ e₃ e₄ : comm_semi_group_expr α) (x : α)
+  (h : to_multiset α (comp e₁ e₂) = to_multiset α (comp e₃ (const x)))
+  (h₂ : eval α (comp e₁ e₂) = eval α (comp e₄ (const x))) (h₃ : len α e₃ = n)
+  : eval α e₃ = eval α e₄ :=
+begin
+  revert x,
+  revert e₁,
+  revert e₂,
+  revert e₃,
+  revert e₄,
+  induction n,
+  {
+    sorry,
+  },
+  {
+    intros f₄ f₃ h₃ f₂ f₁ y,
+    intro h₄,
+    dsimp [to_multiset] at h₄,
+    have s₁ : ∃ a : α, a ∈ to_multiset α f₃, from multiset_non_empty α f₃,
+    have s₂ : ∃ e₃ : comm_semi_group_expr α,
+      to_multiset α (comp e₁ e₂) = to_multiset α (comp e₃ (const a))
+  },
+end
 
 lemma const_along_more [comm_semigroup α] (e₁ e₂ e₃ : comm_semi_group_expr α) (x : α)
   (h : to_multiset α (comp e₁ e₂) = to_multiset α (comp e₃ (const x))) :

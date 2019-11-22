@@ -211,6 +211,25 @@ begin
   },
 end
 
+lemma expr_const_strong [comm_semigroup α] (e₁ e₂ : comm_semi_group_expr α)
+  (a : α) (h : a ∈ to_multiset α (comp e₁ e₂)) : ∃ e₃ : comm_semi_group_expr α,
+  to_multiset α (comp e₁ e₂) = to_multiset α (comp e₃ (const a)) :=
+begin
+  have o₁ : a ∈ to_multiset α e₁ ∨ a ∈ to_multiset α e₂, from
+  begin
+    dsimp [to_multiset] at h,
+    exact multiset.mem_add.mp h,
+  end,
+  cases o₁,
+  {
+    rw comp_comm,
+    exact expr_const α e₂ e₁ a o₁,
+  },
+  {
+    exact expr_const α e₁ e₂ a o₁,
+  },
+end
+
 lemma expr_const_eval [comm_semigroup α] (e₁ e₂ : comm_semi_group_expr α) :
   ∃ e₃ : comm_semi_group_expr α, ∃ a : α,
   eval α (comp e₁ e₂) = eval α (comp e₃ (const a)) :=
@@ -283,6 +302,25 @@ begin
   },
 end
 
+lemma expr_const_eval_with_multiset_strong [comm_semigroup α] (e₁ e₂ : comm_semi_group_expr α)
+  (a : α) (h : a ∈ to_multiset α (comp e₁ e₂)) :
+  ∃ e₃ : comm_semi_group_expr α, eval α (comp e₁ e₂) = eval α (comp e₃ (const a)) :=
+begin
+  have o₁ : a ∈ to_multiset α e₁ ∨ a ∈ to_multiset α e₂, from
+  begin
+    dsimp [to_multiset] at h,
+    exact multiset.mem_add.mp h,
+  end,
+  cases o₁,
+  {
+    rw comp_comm_eval,
+    exact expr_const_eval_with_multiset α e₂ e₁ a o₁,
+  },
+  {
+    exact expr_const_eval_with_multiset α e₁ e₂ a o₁,
+  },
+end
+
 lemma multiset_non_empty [comm_semigroup α] (e : comm_semi_group_expr α) :
   ∃ a : α, a ∈ to_multiset α e :=
 begin
@@ -315,115 +353,127 @@ begin
   rw o₁,
 end
 
-
-
-lemma const_along_more [comm_semigroup α] (e₁ e₂ e₃ : comm_semi_group_expr α) (x : α)
-  (h : to_multiset α (comp e₁ e₂) = to_multiset α (comp e₃ (const x))) :
-   eval α (comp e₁ e₂) = eval α (comp e₃ (const x))  :=
+lemma missing_link' [comm_semigroup α] (n : ℕ) (e e₃ : comm_semi_group_expr α) (x : α)
+  (h₂ : len α e = n) (h : to_multiset α e = to_multiset α (comp e₃ (const x))) :
+  eval α e = eval α (comp e₃ (const x)) :=
 begin
-  have w₁ : x ∈ to_multiset α e₁ ∨ x ∈ to_multiset α e₂, from
-  begin
-    have o₁ : x ∈ to_multiset α (comp e₃ (const x)), from
-    begin
-      dsimp [to_multiset],
-      rw multiset.mem_add,
-      right,
-      exact set.mem_insert x (λ (x : α), false),
-    end,
-    have o₂ : x ∈ to_multiset α (comp e₁ e₂), from begin rw ←h at o₁, exact o₁, end,
-    dsimp [to_multiset] at o₂,
-    exact multiset.mem_add.mp o₂,
-  end,
-  cases w₁,
+  revert e e₃ x,
+  induction n,
   {
-    rw comp_comm at h,
-    rw comp_comm_eval,
-    have o₁ :  ∃ e₄ : comm_semi_group_expr α, eval α (comp e₂ e₁) = eval α (comp e₄ (const x)), from
-      expr_const_eval_with_multiset α e₂ e₁ x w₁,
-    cases o₁,
-    rw o₁_h,
-    dsimp [eval],
-    have o₂ : eval α o₁_w = eval α e₃, from sorry,
-    rw o₂,
+    intros,
+    sorry,
   },
   {
-    have o₁ :  ∃ e₄ : comm_semi_group_expr α, eval α (comp e₁ e₂) = eval α (comp e₄ (const x)), from
-      expr_const_eval_with_multiset α e₁ e₂ x w₁,
-    cases o₁,
-    rw o₁_h,
-    dsimp [eval],
-    have o₂ : eval α o₁_w = eval α e₃, from sorry,
-    rw o₂,
+    intros,
+    cases e,
+    {
+      sorry,
+    },
+    {
+      have o₁ : x ∈ to_multiset α (comp e₃ (const x)), from sorry,
+      have o₂ : x ∈ to_multiset α (comp e_a e_a_1), from sorry,
+      have o₃ : ∃ e₁ : comm_semi_group_expr α, to_multiset α (comp e_a e_a_1)
+        = to_multiset α (comp e₁ (const x)), from sorry,
+      cases o₃ with b hb,
+      have o₄ : ∃ e₂ : comm_semi_group_expr α, eval α (comp e_a e_a_1)
+        = eval α (comp e₂ (const x)),
+        from expr_const_eval_with_multiset_strong α e_a e_a_1 x o₂,
+      cases o₄ with c hc,
+      have j₁ : len α c = n_n, from sorry,
+      rw hc,
+      cases e₃,
+      {
+        sorry,
+      },
+      {
+        have o₅ : ∃ f : α, f ∈ to_multiset α (comp e₃_a e₃_a_1),
+          from multiset_non_empty α (comp e₃_a e₃_a_1),
+        cases o₅ with f hf,
+        have o₆ : ∃ e₄ : comm_semi_group_expr α, to_multiset α (comp e₃_a e₃_a_1)
+          = to_multiset α (comp e₄ (const f)), from expr_const_strong α e₃_a e₃_a_1 f hf,
+        cases o₆ with e₄ he₄,
+        have o₇ : eval α (comp e₃_a e₃_a_1) = eval α (comp e₄ (const f)), from
+        begin
+          apply n_ih,
+          {
+            sorry,
+          },
+          {
+            exact he₄,
+          },
+        end,
+        sorry,
+      },
+    },
   },
 end
 
-theorem main_thm_aux [comm_semigroup α] (e₁ e₂ : comm_semi_group_expr α) (x₁ x₂ : α)
-  (h : to_multiset α e₁ = to_multiset α e₂) : eval α e₁ = eval α e₂ :=
+lemma missing_link [comm_semigroup α] (n : ℕ) (e₁ e₂ e₃ : comm_semi_group_expr α) (x : α)
+  (h₂ : len α e₁ = n) (h : to_multiset α (comp e₁ e₂) = to_multiset α (comp e₃ (const x))) :
+  eval α (comp e₁ e₂) = eval α (comp e₃ (const x)) :=
+missing_link' α (len α (comp e₁ e₂)) (comp e₁ e₂) e₃ x rfl h
+
+theorem main_thm_aux [comm_semigroup α] (n : ℕ) (e₁ e₂ : comm_semi_group_expr α)
+  (h₂ : len α e₁ = n) (h : to_multiset α e₁ = to_multiset α e₂)
+  : eval α e₁ = eval α e₂ :=
 begin
-  cases e₁,
+  revert e₁ e₂ h,
+  induction n,
   {
-    cases e₂,
-    {
-      dsimp [to_multiset] at h,
-      have o₁ : e₁ = e₂, from (multiset.cons_inj_left 0).mp h,
-      rw o₁,
-    },
-    {
-      have o₁ : len α (const e₁) = 1, from rfl,
-      have o₂ : 2 ≤ len α (comp e₂_a e₂_a_1), from comp_neq_const α e₂_a e₂_a_1,
-      have o₃ : len α (const e₁) = len α (comp e₂_a e₂_a_1), from
-      begin
-        dsimp [len],
-        rw h,
-      end,
-      rw o₁ at o₃,
-      rw ←o₃ at o₂,
-      exfalso,
-      exact not_q_eq_p_and_q_lt_p 1 1 rfl o₂,
-    },
+    intros,
+    sorry,
   },
   {
-    cases e₂,
+    intros,
+    have o₁ : ∃ a : α, a ∈ to_multiset α e₁, from multiset_non_empty α e₁,
+    cases o₁ with a ha,
+    have o₂ : a ∈ to_multiset α e₂, from set.mem_of_eq_of_mem (eq.symm h) ha,
+    cases e₁,
     {
-      --This is duplicate code :(
-      have o₁ : len α (const e₂) = 1, from rfl,
-      have o₂ : 2 ≤ len α (comp e₁_a e₁_a_1), from comp_neq_const α e₁_a e₁_a_1,
-      have o₃ : len α (const e₂) = len α (comp e₁_a e₁_a_1), from
-      begin
-        dsimp [len],
-        rw h,
-      end,
-      rw o₁ at o₃,
-      rw ←o₃ at o₂,
-      exfalso,
-      exact not_q_eq_p_and_q_lt_p 1 1 rfl o₂,
-    },
-    {
-      have o₁ : ∃ x : α, x ∈ to_multiset α (comp e₁_a e₁_a_1),
-        from multiset_non_empty α (comp e₁_a e₁_a_1),
-      cases o₁,
-      have w₁ : o₁_w ∈ to_multiset α e₁_a ∨ o₁_w ∈ to_multiset α e₁_a_1, from
-        multiset.mem_add.mp o₁_h,
-      cases w₁,
+      cases e₂,
       {
-        rw comp_comm_eval,
-        have o₂ : ∃ e₃ : comm_semi_group_expr α,
-          to_multiset α (comp e₁_a_1 e₁_a) = to_multiset α (comp e₃ (const o₁_w)), from
-          expr_const α e₁_a_1 e₁_a o₁_w w₁,
-        cases o₂,
-        rw comp_comm at h,
-        rw [const_along_more _ _ _ _ _ o₂_h],
-        rw h at o₂_h,
-        rw [const_along_more _ _ _ _ _ o₂_h],
+        sorry,
       },
       {
-        have o₂ : ∃ e₃ : comm_semi_group_expr α,
-          to_multiset α (comp e₁_a e₁_a_1) = to_multiset α (comp e₃ (const o₁_w)), from
-          expr_const α e₁_a e₁_a_1 o₁_w w₁,
-        cases o₂,
-        rw [const_along_more _ _ _ _ _ o₂_h],
-        rw h at o₂_h,
-        rw [const_along_more _ _ _ _ _ o₂_h],
+        sorry,
+      },
+    },
+    {
+      cases e₂,
+      {
+        sorry,
+      },
+      {
+        have o₃ : ∃ e₃ : comm_semi_group_expr α, to_multiset α (comp e₁_a e₁_a_1)
+          = to_multiset α (comp e₃ (const a)), from expr_const_strong α e₁_a e₁_a_1 a ha,
+        have o₄ : ∃ e₄ : comm_semi_group_expr α, to_multiset α (comp e₂_a e₂_a_1)
+          = to_multiset α (comp e₄ (const a)), from expr_const_strong α e₂_a e₂_a_1 a o₂,
+        cases o₃ with e₃ he₃,
+        cases o₄ with e₄ he₄,
+        have o₅ : eval α (comp e₁_a e₁_a_1) = eval α (comp e₃ (const a)),
+          from missing_link α (len α e₁_a) e₁_a e₁_a_1 e₃ a rfl he₃,
+        have o₆ : eval α (comp e₂_a e₂_a_1) = eval α (comp e₄ (const a)),
+          from missing_link α (len α e₂_a) e₂_a e₂_a_1 e₄ a rfl he₄,
+        rw [o₅, o₆],
+        have o₇ : to_multiset α e₃ = to_multiset α e₄, from
+        begin
+          rw [he₃, he₄] at h,
+          dsimp [to_multiset] at h,
+          rw add_right_cancel_iff at h,
+          exact h,
+        end,
+        have o₈ : len α e₃ = n_n, from
+        begin
+          sorry,
+        end,
+        have s₁ : eval α e₃ = eval α e₄, from
+        begin
+          apply n_ih,
+          exact o₇,
+          exact o₈,
+        end,
+        dsimp [eval],
+        rw s₁,
       },
     },
   },
@@ -434,5 +484,5 @@ theorem main_thm [comm_semigroup α] (e₁ e₂ : comm_semi_group_expr α) (x₁
   : x₁ = x₂ :=
 begin
   rw [←w1, ←w2],
-  exact main_thm_aux α e₁ e₂ x₁ x₁ h,
+  exact main_thm_aux α (len α e₁) e₁ e₂ x₁ x₁ h rfl,
 end

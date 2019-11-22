@@ -22,6 +22,14 @@ do (g::s) ← get_goals,
 meta def sbe (num : ℕ := 5) : tactic unit :=
 trace (sbe_string num)
 
+/-- calls `cases` on every local hypothesis, succeeding if
+    it succeeds on at least one hypothesis. -/
+--modify this so it reports all successful application of cases and induction
+meta def case_bash : tactic unit :=
+do l ← local_context,
+   r ← successes (l.reverse.map (λ h, cases h >> skip)),
+   when (r.empty) failed
+
 meta def tactics_list : list (tactic string) :=
 [ reflexivity                                 >> pure "refl",
   `[exact dec_trivial]                        >> pure "exact dec_trivial",
@@ -78,7 +86,7 @@ def flatten_list {α : Type} : list (list α) → list α
 meta def check_list_aux : ℕ → list string → tactic (list string)
 | 0     [] := none
 | 0     L  := do return L
-| (n+1) L  := do (Q : list (list string)) ← tactics_list.mmap (λ t, lock_tactic_state
+| (n+1) L  := do (A : list (list string)) ← tactics_list.mmap (λ t, lock_tactic_state
                                         (do str ← t,
                                             let L' := L ++ [str],
                                             C ← check_list_aux n L',
@@ -90,7 +98,6 @@ meta def check_list (n : ℕ := 3) : tactic unit :=
 do L ← tactics_list.mmap (λ t, lock_tactic_state ((do str ← t, return str) <|> return "")),
    L.mmap (λ str, trace str),
    skip
-
 
 open interactive lean.parser interactive.types
 open tactic tactic.suggest
@@ -104,8 +111,8 @@ do asms ← mk_assumption_set no_dflt hs attr_names,
 
 end tactic.interactive
 
-example (n m : ℕ) : n * m = m * n :=
-begin
-  --check_list,
-
-end
+-- example (n m : ℕ) : n * m = m * n :=
+-- begin
+--   --check_list,
+--   sorry,
+-- end
