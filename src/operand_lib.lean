@@ -5,141 +5,114 @@ import hotkeys
 
 open tactic
 
--- lemma eq_big_sum_Z (f g : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = g m)
---   : finset.sum S (λ s, f s) = finset.sum S (λ s, g s) :=
--- begin
---   exact finset.sum_congr rfl h,
--- end
+lemma eq_big_sum_Z (f g : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = g m)
+  : finset.sum S (λ s, f s) = finset.sum S (λ s, g s) :=
+begin
+  exact finset.sum_congr rfl h,
+end
 
--- lemma eq_big_prod_Z (f g : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = g m)
---   : finset.prod S (λ s, f s) = finset.prod S (λ s, g s) :=
--- begin
---   exact finset.fold_congr h,
--- end
+lemma eq_big_prod_Z (f g : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = g m)
+  : finset.prod S (λ s, f s) = finset.prod S (λ s, g s) :=
+begin
+  exact finset.fold_congr h,
+end
 
--- lemma eq_big_fold_Z (f g : ℤ → ℤ) (S : finset ℤ)
---   (h : ∀ m ∈ S, f m = g m)
---   : finset.fold (+) 0 (λ s, f s) S = finset.fold (+) 0 (λ s, g s) S :=
--- begin
---   exact finset.sum_congr rfl h,
--- end
+lemma eq_big_fold_Z (f g : ℤ → ℤ) (S : finset ℤ)
+  (h : ∀ m ∈ S, f m = g m)
+  : finset.fold (+) 0 (λ s, f s) S = finset.fold (+) 0 (λ s, g s) S :=
+begin
+  exact finset.sum_congr rfl h,
+end
 
--- lemma sum_of_odd_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
---   : finset.sum S (λ s, f s) = finset.sum S (λ s, - f (- s)) :=
--- begin
---   exact finset.sum_congr rfl h,
--- end
+lemma sum_of_odd_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
+  : finset.sum S (λ s, f s) = finset.sum S (λ s, - f (- s)) :=
+begin
+  exact finset.sum_congr rfl h,
+end
 
--- lemma prod_of_odd_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
---   : finset.prod S (λ s, f s) = finset.prod S (λ s, - f (- s)) :=
--- begin
---   exact finset.fold_congr h
--- end
+lemma prod_of_odd_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
+  : finset.prod S (λ s, f s) = finset.prod S (λ s, - f (- s)) :=
+begin
+  exact finset.fold_congr h
+end
 
--- lemma fold_of_odd_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
---   : finset.fold (+) 0 (λ s, f s) S = finset.fold (+) 0 (λ s, - f (- s)) S :=
--- begin
---   exact finset.sum_congr rfl h,
--- end
+lemma fold_of_odd_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
+  : finset.fold (+) 0 (λ s, f s) S = finset.fold (+) 0 (λ s, - f (- s)) S :=
+begin
+  exact finset.sum_congr rfl h,
+end
 
--- lemma sum_test_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 0)
---   : finset.sum S (λ s, f s) = 0 :=
--- begin
---   exact finset.sum_eq_zero h,
--- end
+lemma sum_test_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 0)
+  : finset.sum S (λ s, f s) = 0 :=
+begin
+  exact finset.sum_eq_zero h,
+end
 
--- lemma prod_test_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 1)
---   : finset.prod S (λ s, f s) = 1 :=
--- begin
---   exact finset.prod_eq_one h,
--- end
+lemma prod_test_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 1)
+  : finset.prod S (λ s, f s) = 1 :=
+begin
+  exact finset.prod_eq_one h,
+end
 
--- lemma fold_test_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 0)
---   : finset.fold (+) 0 (λ s, f s) S = 0 :=
--- begin
---   exact finset.sum_eq_zero h,
--- end
+lemma fold_test_Z (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 0)
+  : finset.fold (+) 0 (λ s, f s) S = 0 :=
+begin
+  exact finset.sum_eq_zero h,
+end
 
--- lemma eq_big_sum_Z_no_lambda (f g : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = g m)
---   : finset.sum S f = finset.sum S (λ s, g s) :=
--- begin
---   exact finset.sum_congr rfl h,
--- end
+lemma eq_big_sum_Z_no_lambda (f g : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = g m)
+  : finset.sum S f = finset.sum S (λ s, g s) :=
+begin
+  exact finset.sum_congr rfl h,
+end
 
 lemma eq_big_prod_Z_no_lamda (f g : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = g m)
   : finset.prod S f = finset.prod S (λ s, g s) :=
 begin
-  conv {
-    to_lhs,
-    operand {rw [(h s) s_mem]},
-  },
+  exact finset.fold_congr h,
 end
 
 lemma eq_big_fold_Z_no_lamda (f g : ℤ → ℤ) (S : finset ℤ)
   (h : ∀ m ∈ S, f m = g m)
   : finset.fold (+) 0 f S = finset.fold (+) 0 (λ s, g s) S :=
 begin
-  conv {
-    to_lhs,
-    operand {rw [(h s) s_mem]},
-  },
+  exact finset.sum_congr rfl h,
 end
 
 lemma sum_of_odd_Z_no_lamda (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
   : finset.sum S f = finset.sum S (λ s, - f (- s)) :=
 begin
-  conv {
-      to_lhs,
-      operand {rw [(h s) s_mem]},
-    },
+  exact finset.sum_congr rfl h,
 end
 
 lemma prod_of_odd_Z_no_lamda (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
   : finset.prod S f = finset.prod S (λ s, - f (- s)) :=
 begin
-  conv {
-      to_lhs,
-      operand {rw [(h s) s_mem]},
-    },
+  exact finset.fold_congr h,
 end
 
 lemma fold_of_odd_Z_no_lamda (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = - f (- m))
   : finset.fold (+) 0 f S = finset.fold (+) 0 (λ s, - f (- s)) S :=
 begin
-  conv {
-    to_lhs,
-    operand {rw [(h s) s_mem]},
-  },
+  exact finset.sum_congr rfl h,
 end
 
 lemma sum_test_Z_no_lamda (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 0)
   : finset.sum S f = 0 :=
 begin
-  conv {
-    to_lhs,
-    operand {rw [(h s) s_mem]},
-  },
-  exact multiset.sum_map_zero, --library_search
+  exact finset.sum_eq_zero h,
 end
 
 lemma prod_test_Z_no_lamda (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 1)
   : finset.prod S f = 1 :=
 begin
-  conv {
-    to_lhs,
-    operand {rw [(h s) s_mem]},
-  },
-  exact multiset.prod_map_one, --library_search
+  exact finset.prod_eq_one h,
 end
 
 lemma fold_test_Z_no_lamda (f : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = 0)
   : finset.fold (+) 0 f S = 0 :=
 begin
-  conv {
-    to_lhs,
-    operand {rw [(h s) s_mem]},
-  },
-  exact multiset.sum_map_zero, --library_search
+  exact finset.sum_eq_zero h,
 end
 
 lemma eq_big_sum_Z'' (f g : ℤ → ℤ) (S₁ S₂ : finset ℤ) (h : S₁ = S₂) (w : ∀ m ∈ S₂, f m = g m)
@@ -151,14 +124,7 @@ end
 lemma eq_big_sum_Z' (f g : ℤ → ℤ) (S : finset ℤ) (h : ∀ m ∈ S, f m = g m)
   : finset.sum S (λ s, f s) = finset.sum S (λ s, g s) :=
 begin
-  conv {
-    to_lhs,
-    applyc `finset.sum_congr,
-    skip,
-    intro `s,
-    intro `s_mem,
-    rw [h s s_mem],
-  },
+  exact finset.sum_congr rfl h,
 end
 
 universes u v w
@@ -176,15 +142,15 @@ lemma prod_congr (h : f.support = g.support) :
  (∀a∈g.support, f a = g a) → finsupp.prod f op = finsupp.prod g op :=
   λ w, finset.prod_congr h (λ a mem, by rw [w a mem])
 
--- lemma eq_big_finsupp_prod_Z [has_zero β] [comm_monoid γ] (f₁ f₂ : α →₀ β) (g : α → β → γ)
---   (h : f₁.support = f₂.support) (w : ∀a∈f₁.support, f₁ a = f₂ a) :
--- finsupp.prod f₁ g = finsupp.prod f₂ g :=
--- begin
---   apply prod_congr,
---   exact h,
---   rw h at w, -- library_search fails here because of the rw.
---   exact w,
--- end
+lemma eq_big_finsupp_prod_Z [has_zero β] [comm_monoid γ] (f₁ f₂ : α →₀ β) (g : α → β → γ)
+  (h : f₁.support = f₂.support) (w : ∀a∈f₁.support, f₁ a = f₂ a) :
+finsupp.prod f₁ g = finsupp.prod f₂ g :=
+begin
+  apply prod_congr,
+  exact h,
+  rw h at w, -- library_search fails here because of the rw.
+  exact w,
+end
 
 --This lemma is false.
 lemma finsupp_sum_test_Z [has_zero β] [add_comm_monoid γ] (f : α →₀ β) (g : α → β → γ)

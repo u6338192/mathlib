@@ -78,25 +78,23 @@ do tactics_list.mmap (λ t, (do state ← read, str ← t, trace str, discharger
 --    L.mmap(λ l, trace l),
 --    skip
 
---find combinator that does this
-def flatten_list {α : Type} : list (list α) → list α
-| []     := []
-| (h::t) := h ++ flatten_list t
-
+--ideally this would produce a list (list string), where each list of strings
+--is a successful chain of tactics. Note I think this is done in the chain tactic.
 meta def check_list_aux : ℕ → list string → tactic (list string)
 | 0     [] := none
 | 0     L  := do return L
-| (n+1) L  := do (A : list (list string)) ← tactics_list.mmap (λ t, lock_tactic_state
+| (n+1) L  := do A ← tactics_list.mmap (λ t, lock_tactic_state
                                         (do str ← t,
                                             let L' := L ++ [str],
                                             C ← check_list_aux n L',
                                             return C)
                                         <|> return [""]),
-                 return [""]
+                 return (flatten_list A)
 
 meta def check_list (n : ℕ := 3) : tactic unit :=
 do L ← tactics_list.mmap (λ t, lock_tactic_state ((do str ← t, return str) <|> return "")),
-   L.mmap (λ str, trace str),
+   T ← check_list_aux n L,
+   T.mmap (λ str, trace str),
    skip
 
 open interactive lean.parser interactive.types
@@ -111,8 +109,8 @@ do asms ← mk_assumption_set no_dflt hs attr_names,
 
 end tactic.interactive
 
--- example (n m : ℕ) : n * m = m * n :=
--- begin
---   --check_list,
---   sorry,
--- end
+example (n m : ℕ) : n * m = m * n :=
+begin
+  check_list,
+  sorry,
+end
