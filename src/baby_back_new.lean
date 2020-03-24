@@ -84,7 +84,7 @@ meta def baby_back_aux (discharger : tactic unit) (asms : tactic (list expr)) (g
 meta def baby_back (opt : by_elim_opt := { }) : tactic unit :=
 do
   tactic.fail_if_no_goals,
-  (if opt.all_goals then id else focus1) $ do
+  (if opt.backtrack_all_goals then id else focus1) $ do
     [g] ← get_goals,
     L ← baby_back_aux opt.discharger opt.assumptions g opt.max_rep,
     let L := remove_reps L,
@@ -95,7 +95,7 @@ namespace interactive
 
 meta def baby_back (all_goals : parse $ (tk "*")?) (no_dflt : parse only_flag) (hs : parse simp_arg_list)  (attr_names : parse with_ident_list) (opt : by_elim_opt := { }) : tactic unit :=
 do asms ← mk_assumption_set no_dflt hs attr_names,
-   tactic.baby_back { all_goals := all_goals.is_some, discharger := skip, assumptions := return asms, ..opt }
+   tactic.baby_back { backtrack_all_goals := all_goals.is_some, discharger := skip, assumptions := return asms, ..opt }
 
 end interactive
 
@@ -113,7 +113,7 @@ example {m n k : ℕ} : m - n < m - k → k < n :=
 begin baby_back [lt_imp_lt_of_le_imp_le, nat.sub_le_sub_left], end
 
 example {m : nat} : max 0 m = m :=
-begin baby_back end
+begin baby_back, exact rfl, end
 
 example {a : ℕ} (h : a ≤ a / 2) : a = 0 :=
 begin
