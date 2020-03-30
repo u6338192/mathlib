@@ -1,6 +1,6 @@
 -- import tactic.hint
 -- import tactic.suggest
--- import tactic
+import tactic
 
 def ack : ℕ → ℕ → ℕ
 | 0     y     := y+1
@@ -144,3 +144,107 @@ def list_add {α : Type} [has_add α] : list α → list α → list α
 instance list_has_add {α : Type} [has_add α] : has_add (list α) :=
   -- ⟨λ L₁ L₂ : list α, list_add L₁ L₂⟩
   ⟨list_add⟩
+
+def ite' (c : Prop) [d : decidable c] {α : Type}
+  (t e : α) : α :=
+begin
+  apply decidable.rec_on d,
+  exact λ hnc, e,
+  exact λ hc, t,
+end
+-- decidable.rec_on d (λ hnc, e) (λ hc, t)
+
+example : 1 ≠ 0 ∧ (5 < 2 ∨ 3 < 7) := dec_trivial
+
+#print classes
+#print instances inhabited
+
+def inhabited.set (α : Type*) : inhabited (set α) :=
+begin
+  unfold set,
+  apply_instance,
+end
+-- by unfold set; apply_instance
+
+section
+  variables a b c d e : Prop
+  variable p : Prop → Prop
+
+  theorem thm₁ (h : a ↔ b) : (c ∧ a ∧ d → e) ↔ (c ∧ b ∧ d → e) :=
+  propext h ▸ iff.refl _
+
+  theorem thm₂ (h : a ↔ b) (h₁ : p a) : p b :=
+  begin
+    apply eq.subst,
+    apply propext h,
+    apply h₁,
+  end
+  -- propext h ▸ h₁
+end
+
+-- universe u
+
+-- def set (α : Type u) := α → Prop
+
+namespace set
+
+-- variable {α : Type u}
+
+-- definition mem (x : α) (a : set α) := a x
+-- notation e ∈ a := mem e a
+
+theorem setext {a b : set α} (h : ∀ x, x ∈ a ↔ x ∈ b) : a = b :=
+begin
+  apply funext,
+  intro x,
+  apply propext,
+  apply h,
+end
+-- funext (assume x, propext (h x))
+
+end set
+
+def f₁ (x : ℕ) := x
+def f₂ (x : ℕ) := 0 + x
+
+theorem feq : f₁ = f₂ :=
+begin
+  apply funext,
+  intro x,
+  dsimp [f₁, f₂],
+  symmetry,
+  apply zero_add,
+end
+-- funext (assume x, (zero_add x).symm)
+
+def val : ℕ :=
+begin
+  exact eq.rec_on feq (0 : ℕ),
+end
+-- eq.rec_on feq (0 : ℕ)
+
+-- complicated!
+#reduce val
+
+-- evaluates to 0
+#eval val
+
+example (α : Type u) : nonempty α ↔ ∃ x : α, true :=
+begin
+  apply iff.intro,
+  intro a,
+  induction a,
+  use a,
+
+  intro a,
+  cases a with a h,
+  use a,
+end
+-- iff.intro (λ ⟨a⟩, ⟨a, trivial⟩) (λ ⟨a, h⟩, ⟨a⟩)
+
+open classical
+
+noncomputable theorem indefinite_description
+    {α : Sort u} (p : α → Prop) :
+  (∃ x, p x) → {x // p x} :=
+λ h, choice (let ⟨x, px⟩ := h in ⟨⟨x, px⟩⟩)
