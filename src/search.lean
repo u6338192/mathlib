@@ -27,14 +27,17 @@ Changes:
 
 /-
 To do:
-* Rewrite `suggest_core'` to make better use of `solve_by_elim.` Done
+* Rewrite `suggest_core'` to make better use of `solve_by_elim.` DONE
   -> `suggest` and `library_search` don't remake the assumption set each time a lemma is applied.
-* Get `solve_by_elim` to return a "try this" statement. NOT DONE, need to figure out what's wrong.
+* Get `solve_by_elim` to return a "try this" statement. DONE
+* Namespaces. DONE
 -/
 import tactic.core
 import data.mllist
 
 namespace tactic
+
+namespace output
 
 /--
 Replace any metavariables in the expression with underscores, in preparation for printing
@@ -66,11 +69,21 @@ do s ← read,
    write s,
    return r
 
+end output
+
+namespace solve_by_elim
+
 /-- A list of names of lemmas for use in `solve_by_elim`. This list is only used in `mk_assumption_set`-/
 meta def dflt_list : list name := [`rfl, `trivial, `congr_fun, `congr_arg]
 
-/-- A function with takes a list of `name`s and returns a list of `expr`s in a tactic monad. -/
-meta def mk_const_list (L : list name) : tactic (list expr) := L.mmap mk_const
+meta def funcs : list name := [`rfl, `trivial, `congr_fun, `congr_arg,
+                              `eq.refl, `eq.symm, `eq.trans, `eq.subst,
+                              `and.intro, `and.elim_left, `and.elim_right,
+                              `or.elim, `or.inl, `or.inr,
+                              `iff.intro, `iff.elim_left, `iff.elim_right,
+                              `propext,
+                              `exists.intro, `exists.elim,
+                              `false.elim]
 
 /--
 Builds a collection of lemmas for use in the backtracking search in `solve_by_elim`.
@@ -91,7 +104,7 @@ do (hs, gex, hex, all_hyps) ← decode_simp_arg_list hs,
    hs ← if no_dflt then
           return hs
         else
-          do { dflt_exprs ← mk_const_list dflt_list,
+          do { dflt_exprs ← list.mmap mk_const dflt_list,
                return (dflt_exprs ++ hs) },
    if ¬ no_dflt ∨ all_hyps then do
     ctx ← local_context,
@@ -138,9 +151,14 @@ do
     (if opt.backtrack_all_goals then id else focus1) $
     solve_by_elim_aux opt.discharger opt.assumptions opt.max_rep
 
+end solve_by_elim
+
 open native
 
 namespace suggest
+
+open output
+open solve_by_elim
 
 /-- compute the head symbol of an expression, but normalise `>` to `<` and `≥` to `≤` -/
 -- We may want to tweak this further?
@@ -240,7 +258,7 @@ apply e >>
 -- (We only attempt the "safe" goals in this way in Phase 1. In Phase 2 we will do
 -- backtracking search across all goals, allowing us to guess solutions that involve data, or
 -- unify metavariables, but only as long as we can finish all goals.)
-try (any_goals (independent_goal >> tactic.solve_by_elim { ..opt })) >>
+try (any_goals (independent_goal >> solve_by_elim { ..opt })) >>
 -- Phase 2
 (done <|>
   -- If there were any goals that we did not attempt solving in the first phase
@@ -277,6 +295,8 @@ meta structure application :=
 
 end suggest
 
+open output
+open solve_by_elim
 open suggest
 
 declare_trace suggest         -- Trace a list of all relevant lemmas
@@ -291,7 +311,7 @@ do g :: _ ← get_goals,
 
    -- Make sure that `solve_by_elim` doesn't just solve the goal immediately:
    (lock_tactic_state (do
-     focus1 $ tactic.solve_by_elim { ..opt },
+     focus1 $ solve_by_elim { ..opt },
      s ← read,
      m ← tactic_statement g,
      g ← instantiate_mvars g,
@@ -424,15 +444,15 @@ meta def solve_by_elim (all_goals : parse $ (tk "*")?) (no_dflt : parse only_fla
   tactic unit :=
 do asms ← mk_assumption_set no_dflt hs attr_names,
    g :: _ ← get_goals,
-   tactic.solve_by_elim
+   tactic.solve_by_elim.solve_by_elim
    { backtrack_all_goals := all_goals.is_some ∨ opt.backtrack_all_goals,
      assumptions := return asms,
      ..opt },
-     --if ¬(all_goals.is_some ∨ opt.backtrack_all_goals) then
+     if ¬(all_goals.is_some ∨ opt.backtrack_all_goals) then
      do { state ← read,
-        let m := message g state,
-        skip }
-     --else skip
+        m ← message g state,
+        trace m }
+     else skip
 
 declare_trace silence_suggest -- Turn off `exact/refine ...` trace messages for `suggest`
 
