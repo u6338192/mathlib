@@ -3,11 +3,8 @@ Copyright (c) 2018 Kenny Lau. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau, Yury Kudryashov
 -/
-
-import data.complex.basic
 import data.matrix.basic
 import linear_algebra.tensor_product
-import ring_theory.subring
 import algebra.commute
 
 /-!
@@ -46,8 +43,8 @@ end prio
 def algebra_map (R : Type u) (A : Type v) [comm_semiring R] [semiring A] [algebra R A] : R →+* A :=
 algebra.to_ring_hom
 
-/-- Creating an algebra from a morphism in CRing. -/
-def ring_hom.to_algebra {R S} [comm_semiring R] [semiring S] (i : R →+* S)
+/-- Creating an algebra from a morphism to the center of a semiring. -/
+def ring_hom.to_algebra' {R S} [comm_semiring R] [semiring S] (i : R →+* S)
   (h : ∀ c x, i c * x = x * i c) :
   algebra R S :=
 { smul := λ c x, i c * x,
@@ -55,9 +52,36 @@ def ring_hom.to_algebra {R S} [comm_semiring R] [semiring S] (i : R →+* S)
   smul_def' := λ c x, rfl,
   .. i}
 
+/-- Creating an algebra from a morphism to a commutative semiring. -/
+def ring_hom.to_algebra {R S} [comm_semiring R] [comm_semiring S] (i : R →+* S) :
+  algebra R S :=
+i.to_algebra' $ λ _, mul_comm _
+
 namespace algebra
 
 variables {R : Type u} {S : Type v} {A : Type w}
+
+/-- Let `R` be a commutative semiring, let `A` be a semiring with a `semimodule R` structure.
+If `(r • 1) * x = x * (r • 1) = r • x` for all `r : R` and `x : A`, then `A` is an `algebra`
+over `R`. -/
+def of_semimodule' [comm_semiring R] [semiring A] [semimodule R A]
+  (h₁ : ∀ (r : R) (x : A), (r • 1) * x = r • x)
+  (h₂ : ∀ (r : R) (x : A), x * (r • 1) = r • x) : algebra R A :=
+{ to_fun := λ r, r • 1,
+  map_one' := one_smul _ _,
+  map_mul' := λ r₁ r₂, by rw [h₁, mul_smul],
+  map_zero' := zero_smul _ _,
+  map_add' := λ r₁ r₂, add_smul r₁ r₂ 1,
+  commutes' := λ r x, by simp only [h₁, h₂],
+  smul_def' := λ r x, by simp only [h₁] }
+
+/-- Let `R` be a commutative semiring, let `A` be a semiring with a `semimodule R` structure.
+If `(r • x) * y = x * (r • y) = r • (x * y)` for all `r : R` and `x y : A`, then `A`
+is an `algebra` over `R`. -/
+def of_semimodule [comm_semiring R] [semiring A] [semimodule R A]
+  (h₁ : ∀ (r : R) (x y : A), (r • x) * y = r • (x * y))
+  (h₂ : ∀ (r : R) (x y : A), x * (r • y) = r • (x * y)) : algebra R A :=
+of_semimodule' (λ r x, by rw [h₁, one_mul]) (λ r x, by rw [h₂, mul_one])
 
 section semiring
 
@@ -108,7 +132,7 @@ instance to_module : module R A := { .. algebra.to_semimodule }
 
 /-- Creating an algebra from a subring. This is the dual of ring extension. -/
 instance of_subring (S : set R) [is_subring S] : algebra S R :=
-ring_hom.to_algebra ⟨coe, rfl, λ _ _, rfl, rfl, λ _ _, rfl⟩ $ λ _, mul_comm  _
+ring_hom.to_algebra ⟨coe, rfl, λ _ _, rfl, rfl, λ _ _, rfl⟩
 
 variables (R A)
 /-- The multiplication in an algebra is a bilinear map. -/
@@ -180,7 +204,16 @@ variables [algebra R A] [algebra R B] [algebra R C] [algebra R D]
 
 instance : has_coe_to_fun (A →ₐ[R] B) := ⟨_, λ f, f.to_fun⟩
 
-instance : has_coe (A →ₐ[R] B) (A →+* B) := ⟨alg_hom.to_ring_hom⟩
+instance coe_ring_hom : has_coe (A →ₐ[R] B) (A →+* B) := ⟨alg_hom.to_ring_hom⟩
+
+instance coe_monoid_hom : has_coe (A →ₐ[R] B) (A →* B) := ⟨λ f, ↑(f : A →+* B)⟩
+
+@[simp, norm_cast] lemma coe_mk {f : A → B} (h₁ h₂ h₃ h₄ h₅) :
+  ⇑(⟨f, h₁, h₂, h₃, h₄, h₅⟩ : A →ₐ[R] B) = f := rfl
+
+@[simp, norm_cast] lemma coe_to_ring_hom (f : A →ₐ[R] B) : ⇑(f : A →+* B) = f := rfl
+
+@[simp, norm_cast] lemma coe_to_monoid_hom (f : A →ₐ[R] B) : ⇑(f : A →* B) = f := rfl
 
 variables (φ : A →ₐ[R] B)
 
@@ -204,6 +237,16 @@ ring_hom.ext $ φ.commutes
 
 @[simp] lemma map_one : φ 1 = 1 :=
 φ.to_ring_hom.map_one
+
+@[simp] lemma map_smul (r : R) (x : A) : φ (r • x) = r • φ x :=
+by simp only [algebra.smul_def, map_mul, commutes]
+
+@[simp] lemma map_pow (x : A) (n : ℕ) : φ (x ^ n) = (φ x) ^ n :=
+φ.to_ring_hom.map_pow x n
+
+lemma map_sum {ι : Type*} (f : ι → A) (s : finset ι) :
+  φ (s.sum f) = s.sum (λx, φ (f x)) :=
+φ.to_ring_hom.map_sum f s
 
 section
 
@@ -237,6 +280,19 @@ ext $ λ x, rfl
 
 end semiring
 
+section comm_semiring
+
+variables [comm_semiring R] [comm_semiring A] [comm_semiring B]
+variables [algebra R A] [algebra R B]
+
+variables (φ : A →ₐ[R] B)
+
+lemma map_prod {ι : Type*} (f : ι → A) (s : finset ι) :
+  φ (s.prod f) = s.prod (λx, φ (f x)) :=
+φ.to_ring_hom.map_prod f s
+
+end comm_semiring
+
 variables [comm_ring R] [ring A] [ring B] [ring C]
 variables [algebra R A] [algebra R B] [algebra R C] (φ : A →ₐ[R] B)
 
@@ -250,7 +306,7 @@ variables [algebra R A] [algebra R B] [algebra R C] (φ : A →ₐ[R] B)
 def to_linear_map : A →ₗ B :=
 { to_fun := φ,
   add := φ.map_add,
-  smul := λ (c : R) x, by rw [algebra.smul_def, φ.map_mul, φ.commutes c, algebra.smul_def] }
+  smul := φ.map_smul }
 
 @[simp] lemma to_linear_map_apply (p : A) : φ.to_linear_map p = φ p := rfl
 
@@ -327,17 +383,10 @@ end alg_hom
 namespace rat
 
 instance algebra_rat {α} [division_ring α] [char_zero α] : algebra ℚ α :=
-(rat.cast_hom α).to_algebra $
+(rat.cast_hom α).to_algebra' $
 λ r x, (commute.cast_int_left x r.1).div_left (commute.cast_nat_left x r.2)
 
 end rat
-
-namespace complex
-
-instance algebra_over_reals : algebra ℝ ℂ :=
-(ring_hom.of coe).to_algebra $ λ _, mul_comm _
-
-end complex
 
 /-- A subalgebra is a subring that includes the range of `algebra_map`. -/
 structure subalgebra (R : Type u) (A : Type v)
@@ -447,12 +496,11 @@ end alg_hom
 
 namespace algebra
 
-variables {R : Type u} (A : Type v)
-variables [comm_ring R] [ring A] [algebra R A]
-include R
+variables (R : Type u) (A : Type v)
 
-variables (R)
-instance id : algebra R R := (ring_hom.id R).to_algebra mul_comm
+variables [comm_semiring R] [semiring A] [algebra R A]
+
+instance id : algebra R R := (ring_hom.id R).to_algebra
 
 namespace id
 
@@ -469,7 +517,12 @@ variables {R}
 
 theorem of_id_apply (r) : of_id R A r = algebra_map R A r := rfl
 
-variables (R) {A}
+end algebra
+
+namespace algebra
+
+variables (R : Type u) {A : Type v} [comm_ring R] [ring A] [algebra R A]
+
 /-- The minimal subalgebra that includes `s`. -/
 def adjoin (s : set A) : subalgebra R A :=
 { carrier := ring.closure (set.range (algebra_map R A) ∪ s),
@@ -588,11 +641,5 @@ def linear_map.restrict_scalars (f : E →ₗ[S] F) : E →ₗ[R] F :=
 
 @[simp, norm_cast squash] lemma linear_map.coe_restrict_scalars_eq_coe (f : E →ₗ[S] F) :
   (f.restrict_scalars R : E → F) = f := rfl
-
-/- Register as an instance (with low priority) the fact that a complex vector space is also a real
-vector space. -/
-instance module.complex_to_real (E : Type*) [add_comm_group E] [module ℂ E] : module ℝ E :=
-module.restrict_scalars ℝ ℂ E
-attribute [instance, priority 900] module.complex_to_real
 
 end restrict_scalars

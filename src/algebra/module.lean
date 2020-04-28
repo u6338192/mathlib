@@ -3,7 +3,7 @@ Copyright (c) 2015 Nathaniel Thomas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Nathaniel Thomas, Jeremy Avigad, Johannes Hölzl, Mario Carneiro
 -/
-import algebra.ring algebra.big_operators group_theory.subgroup group_theory.group_action
+import group_theory.group_action
 
 /-!
 # Modules over a ring
@@ -71,27 +71,31 @@ theorem add_smul : (r + s) • x = r • x + s • x := semimodule.add_smul r s 
 variables (R)
 @[simp] theorem zero_smul : (0 : R) • x = 0 := semimodule.zero_smul x
 
-variable {R}
+variable (M)
+
+/-- `(•)` as an `add_monoid_hom`. -/
+def smul_add_hom : R →+ M →+ M :=
+{ to_fun := const_smul_hom M,
+  map_zero' := add_monoid_hom.ext $ λ r, by simp,
+  map_add' := λ x y, add_monoid_hom.ext $ λ r, by simp [add_smul] }
+
+variables {R M}
+
+@[simp] lemma smul_add_hom_apply (r : R) (x : M) :
+  smul_add_hom R M r x = r • x := rfl
 
 lemma semimodule.eq_zero_of_zero_eq_one (zero_eq_one : (0 : R) = 1) : x = 0 :=
 by rw [←one_smul R x, ←zero_eq_one, zero_smul]
 
-instance smul.is_add_monoid_hom (x : M) : is_add_monoid_hom (λ r:R, r • x) :=
-{ map_zero := zero_smul _ x,
-  map_add := λ r₁ r₂, add_smul r₁ r₂ x }
-
 lemma list.sum_smul {l : list R} {x : M} : l.sum • x = (l.map (λ r, r • x)).sum :=
-show (λ r, r • x) l.sum = (l.map (λ r, r • x)).sum,
-from (list.sum_hom _ _).symm
+((smul_add_hom R M).flip x).map_list_sum l
 
 lemma multiset.sum_smul {l : multiset R} {x : M} : l.sum • x = (l.map (λ r, r • x)).sum :=
-show (λ r, r • x) l.sum = (l.map (λ r, r • x)).sum,
-from (multiset.sum_hom _ _).symm
+((smul_add_hom R M).flip x).map_multiset_sum l
 
 lemma finset.sum_smul {f : ι → R} {s : finset ι} {x : M} :
   s.sum f • x = s.sum (λ r, (f r) • x) :=
-show (λ r, r • x) (s.sum f) = s.sum (λ r, (f r) • x),
-from (finset.sum_hom _ _).symm
+((smul_add_hom R M).flip x).map_sum f s
 
 end semimodule
 
@@ -214,24 +218,38 @@ notation β ` →ₗ[`:25 α:25 `] `:0 γ:0 := linear_map α β γ
 
 namespace linear_map
 
-variables [ring R] [add_comm_group M] [add_comm_group M₂] [add_comm_group M₃]
-variables [module R M] [module R M₂] [module R M₃]
+variables [ring R] [add_comm_group M] [add_comm_group M₂]
+
+section
+variables [module R M] [module R M₂]
 variables (f g : M →ₗ[R] M₂)
 
 instance : has_coe_to_fun (M →ₗ[R] M₂) := ⟨_, to_fun⟩
 
 @[simp] lemma coe_mk (f : M → M₂) (h₁ h₂) :
   ((linear_map.mk f h₁ h₂ : M →ₗ[R] M₂) : M → M₂) = f := rfl
+end
 
-@[simp] lemma to_fun_eq_coe (f : M →ₗ[R] M₂) : f.to_fun = ⇑f := rfl
+-- We can infer the module structure implicitly from the linear maps,
+-- rather than via typeclass resolution.
+variables {module_M : module R M} {module_M₂ : module R M₂}
+variables (f g : M →ₗ[R] M₂)
+
+@[simp] lemma to_fun_eq_coe : f.to_fun = ⇑f := rfl
 
 theorem is_linear : is_linear_map R f := {..f}
 
-@[ext] theorem ext {f g : M →ₗ[R] M₂} (H : ∀ x, f x = g x) : f = g :=
+variables {f g}
+@[ext] theorem ext (H : ∀ x, f x = g x) : f = g :=
 by cases f; cases g; congr'; exact funext H
 
-theorem ext_iff {f g : M →ₗ[R] M₂} : f = g ↔ ∀ x, f x = g x :=
+lemma coe_fn_congr : Π {x x' : M}, x = x' → f x = f x'
+| _ _ rfl := rfl
+
+theorem ext_iff : f = g ↔ ∀ x, f x = g x :=
 ⟨by { rintro rfl x, refl } , ext⟩
+
+variables (f g)
 
 @[simp] lemma map_add (x y : M) : f (x + y) = f x + f y := f.add x y
 
@@ -243,12 +261,12 @@ by rw [← zero_smul R, map_smul f 0 0, zero_smul]
 instance : is_add_group_hom f := { map_add := map_add f }
 
 /-- convert a linear map to an additive map -/
-def to_add_monoid_hom (f : M →ₗ[R] M₂) : M →+ M₂ :=
+def to_add_monoid_hom : M →+ M₂ :=
 { to_fun := f,
   map_zero' := f.map_zero,
   map_add' := f.map_add }
 
-@[simp] lemma to_add_monoid_hom_coe (f : M →ₗ[R] M₂) :
+@[simp] lemma to_add_monoid_hom_coe :
   ((f.to_add_monoid_hom) : M → M₂) = f := rfl
 
 @[simp] lemma map_neg (x : M) : f (- x) = - f x :=
@@ -261,15 +279,24 @@ f.to_add_monoid_hom.map_sub x y
   f (t.sum g) = t.sum (λi, f (g i)) :=
 f.to_add_monoid_hom.map_sum _ _
 
-/-- Composition of two linear maps is a linear map -/
-def comp (f : M₂ →ₗ[R] M₃) (g : M →ₗ[R] M₂) : M →ₗ[R] M₃ := ⟨f ∘ g, by simp, by simp⟩
+end linear_map
 
-@[simp] lemma comp_apply (f : M₂ →ₗ[R] M₃) (g : M →ₗ[R] M₂) (x : M) : f.comp g x = f (g x) := rfl
+namespace linear_map
+variables [ring R] [add_comm_group M] [add_comm_group M₂]
+variables [add_comm_group M₃]
+variables {module_M : module R M} {module_M₂ : module R M₂} {module_M₃ : module R M₃}
+variables (f : M₂ →ₗ[R] M₃) (g : M →ₗ[R] M₂)
+
+/-- Composition of two linear maps is a linear map -/
+def comp : M →ₗ[R] M₃ := ⟨f ∘ g, by simp, by simp⟩
+
+@[simp] lemma comp_apply (x : M) : f.comp g x = f (g x) := rfl
 
 /-- Identity map as a `linear_map` -/
-def id : M →ₗ[R] M := ⟨id, λ _ _, rfl, λ _ _, rfl⟩
+def id {R} {M} [ring R] [add_comm_group M] [module R M] : M →ₗ[R] M := ⟨id, λ _ _, rfl, λ _ _, rfl⟩
 
-@[simp] lemma id_apply (x : M) : @id R M _ _ _ x = x := rfl
+@[simp] lemma id_apply {R} {M} [ring R] [add_comm_group M] [module R M] (x : M) :
+  @id R M _ _ _ x = x := rfl
 
 end linear_map
 
@@ -330,22 +357,31 @@ structure submodule (R : Type u) (M : Type v) [ring R]
 
 namespace submodule
 variables [ring R] [add_comm_group M] [add_comm_group M₂]
-variables [module R M] [module R M₂]
-variables (p p' : submodule R M)
-variables {r : R} {x y : M}
+
+section
+variables [module R M]
 
 instance : has_coe (submodule R M) (set M) := ⟨submodule.carrier⟩
 instance : has_mem M (submodule R M) := ⟨λ x p, x ∈ (p : set M)⟩
-@[simp] theorem mem_coe : x ∈ (p : set M) ↔ x ∈ p := iff.rfl
+end
 
-theorem ext' {s t : submodule R M} (h : (s : set M) = t) : s = t :=
-by cases s; cases t; congr'
+-- We can infer the module structure implicitly from the bundled submodule,
+-- rather than via typeclass resolution.
+variables {module_M : module R M}
+variables {p q : submodule R M}
+variables {r : R} {x y : M}
 
-protected theorem ext'_iff {s t : submodule R M}  : (s : set M) = t ↔ s = t :=
+theorem ext' (h : (p : set M) = q) : p = q :=
+by cases p; cases q; congr'
+
+protected theorem ext'_iff : (p : set M) = q ↔ p = q :=
 ⟨ext', λ h, h ▸ rfl⟩
 
-@[ext] theorem ext {s t : submodule R M}
-  (h : ∀ x, x ∈ s ↔ x ∈ t) : s = t := ext' $ set.ext h
+@[ext] theorem ext
+  (h : ∀ x, x ∈ p ↔ x ∈ q) : p = q := ext' $ set.ext h
+
+variables (p)
+@[simp] theorem mem_coe : x ∈ (p : set M) ↔ x ∈ p := iff.rfl
 
 @[simp] lemma zero_mem : (0 : M) ∈ p := p.zero
 
@@ -382,6 +418,7 @@ instance : inhabited p := ⟨0⟩
 instance : has_neg p := ⟨λx, ⟨-x.1, neg_mem _ x.2⟩⟩
 instance : has_scalar R p := ⟨λ c x, ⟨c • x.1, smul_mem _ c x.2⟩⟩
 
+variables {p}
 @[simp, norm_cast] lemma coe_add (x y : p) : (↑(x + y) : M) = ↑x + ↑y := rfl
 @[simp, norm_cast] lemma coe_zero : ((0 : p) : M) = 0 := rfl
 @[simp, norm_cast] lemma coe_neg (x : p) : ((-x : p) : M) = -x := rfl
@@ -401,6 +438,8 @@ instance submodule_is_add_subgroup : is_add_subgroup (p : set M) :=
 
 @[simp, norm_cast] lemma coe_sub (x y : p) : (↑(x - y) : M) = ↑x - ↑y := rfl
 
+variables (p)
+
 instance : module R p :=
 by refine {smul := (•), ..};
    { intros, apply set_coe.ext, simp [smul_add, add_smul, mul_smul] }
@@ -411,8 +450,7 @@ by refine {to_fun := coe, ..}; simp [coe_smul]
 
 @[simp] theorem subtype_apply (x : p) : p.subtype x = x := rfl
 
-lemma subtype_eq_val (p : submodule R M) :
-  ((submodule.subtype p) : p → M) = subtype.val := rfl
+lemma subtype_eq_val : ((submodule.subtype p) : p → M) = subtype.val := rfl
 
 end submodule
 

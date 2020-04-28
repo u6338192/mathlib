@@ -3,8 +3,8 @@ Copyright (c) 2018 Johannes Hölzl. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johannes Hölzl, Callum Sutton, Yury Kudryashov
 -/
-
-import data.equiv.mul_add algebra.field
+import data.equiv.mul_add
+import algebra.field
 
 /-!
 # (Semi)ring equivs
@@ -264,7 +264,7 @@ def units_equiv_ne_zero : units K ≃ {a : K | a ≠ 0} :=
 
 variable {K}
 
-@[simp, nolint simp_nf] -- takes a crazy amount of time to simplify lhs
+@[simp]
 lemma coe_units_equiv_ne_zero (a : units K) :
   ((units_equiv_ne_zero K a) : K) = a := rfl
 
